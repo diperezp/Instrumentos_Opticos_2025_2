@@ -12,7 +12,7 @@ N=1024  # Número de pixeles
 z = 3.125e-6 # Distancia de propagación [m]
 
 # Crear instancia de la clase AngularSpectrum
-asys=AngularSpectrum()
+#asys=AngularSpectrum()
 
 
 
@@ -23,7 +23,7 @@ X_img, Y_img = np.meshgrid(x_img, y_img)  # Malla
 
 # Apertura rectangular
 slit_width = 8e-6  # Ancho de la rendija [m]
-slit_height = 8e-6  # Alto de la rendija [m]
+slit_height = 2e-6  # Alto de la rendija [m]
 U0 = np.where((np.abs(X_img) <= slit_width / 2) & (np.abs(Y_img) <= slit_height / 2), 1, 0)
 
 #hallamos las coordenadas en el plano de Fourier

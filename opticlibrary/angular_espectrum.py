@@ -10,5 +10,6 @@ class AnSpectrum:
     
     def pixel_number(self):
         return self.pixel_size*self.image.shape[0]
-
+    
     def calcular_espectro(self):
+        pass

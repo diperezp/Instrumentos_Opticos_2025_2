@@ -1,12 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
+from opticlibrary.angular_espectrum import AngularSpectrum
+
+
 
 walenghth = 500e-9  # Longitud de onda [m]
 k = 2 * np.pi / walenghth  # Número de onda [1/m]
 pixel_size = 39e-9  # Tamaño del pixel [m]
 N=1024  # Número de pixeles
-z = 3.125e-7 # Distancia de propagación [m]
+z = 3.125e-6 # Distancia de propagación [m]
+
+# Crear instancia de la clase AngularSpectrum
+asys=AngularSpectrum()
 
 
 
@@ -16,8 +22,8 @@ y_img = np.linspace(-20e-6, 20e-6, N)   # Coordenadas y [m]
 X_img, Y_img = np.meshgrid(x_img, y_img)  # Malla
 
 # Apertura rectangular
-slit_width = 4e-6  # Ancho de la rendija [m]
-slit_height = 4e-6  # Alto de la rendija [m]
+slit_width = 8e-6  # Ancho de la rendija [m]
+slit_height = 8e-6  # Alto de la rendija [m]
 U0 = np.where((np.abs(X_img) <= slit_width / 2) & (np.abs(Y_img) <= slit_height / 2), 1, 0)
 
 #hallamos las coordenadas en el plano de Fourier

@@ -8,16 +8,16 @@ from tkinter import Tk, filedialog
 
 
 
-walength = 500e-9  # Longitud de onda [m]
+walength = 633e-9  # Longitud de onda [m]
 k = 2 * np.pi / walength  # Número de onda [1/m]
-length_side= 48e-3 #tamaño de la imagen [m]
+length_side= 5.8e-3 #tamaño de la imagen [m]
 N=1024  # Número de pixeles
 pixel_size = length_side/N   # Tamaño del pixel [m]
 
 z_max=N*(pixel_size**2)/walength
 print(f"z_max: {z_max*1e2:.2f} cm")
 
-z = 1# Distancia de propagación [m]
+z = 0.1# Distancia de propagación [m]
 
 # Crear instancia de la clase AngularSpectrum
 #asys=AngularSpectrum()

@@ -1,30 +1,77 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
-from opticlibrary.angular_espectrum import AngularSpectrum
+import imageio
+import cv2
+from tkinter import Tk, filedialog
 
 
 
-walenghth = 500e-9  # Longitud de onda [m]
-k = 2 * np.pi / walenghth  # Número de onda [1/m]
-pixel_size = 39e-9  # Tamaño del pixel [m]
+
+walength = 500e-9  # Longitud de onda [m]
+k = 2 * np.pi / walength  # Número de onda [1/m]
+length_side= 48e-3 #tamaño de la imagen [m]
 N=1024  # Número de pixeles
-z = 3.125e-6 # Distancia de propagación [m]
+pixel_size = length_side/N   # Tamaño del pixel [m]
+
+z_max=N*(pixel_size**2)/walength
+print(f"z_max: {z_max*1e2:.2f} cm")
+
+z = 1# Distancia de propagación [m]
 
 # Crear instancia de la clase AngularSpectrum
 #asys=AngularSpectrum()
 
+# Se genera una funcion que genere el estimulo de entrada, osea la imagen o apertura en terminos opticos 
+def generador_u0(imagen, dx,N=1024):
+    '''
+    Genera el campo complejo de entrada u0 a partir de una imagen.
+    
+    Parámetros:
+    imagen : str
+        Ruta de la imagen a cargar.
+    dx : float
+        Tamaño del pixel en metros.
+        
+    Retorna:
+    u0 : ndarray
+        Campo complejo de entrada.
+    '''
+    # Cargar la imagen en escala de grises
+    img = imageio.v2.imread(imagen, mode='F')
+    img = np.pad(img, 200, mode='constant')  # Padding para evitar efectos de borde
+    img = cv2.resize(img, dsize=(N,N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a 1600x1600 píxeles
+    print("*******")
+    
+    # Normalizar la imagen para que los valores estén entre 0 y 1
+    img = img / np.max(img)
+    
+    # Convertir la imagen a un campo complejo (amplitud + fase)
+    u0 = img * np.exp(1j * 0)  # Asumiendo fase cero inicialmente
+    
+    return u0
+
+
 
 
 #coordenadas de la imagen
-x_img = np.linspace(-20e-6, 20e-6, N)  # Coordenadas x [m]
-y_img = np.linspace(-20e-6, 20e-6, N)   # Coordenadas y [m]
+x_img = np.linspace(-length_side/2, length_side/2, N)  # Coordenadas x [m]
+y_img = np.linspace(-length_side/2, length_side/2, N)   # Coordenadas y [m]
 X_img, Y_img = np.meshgrid(x_img, y_img)  # Malla
 
-# Apertura rectangular
-slit_width = 8e-6  # Ancho de la rendija [m]
-slit_height = 2e-6  # Alto de la rendija [m]
-U0 = np.where((np.abs(X_img) <= slit_width / 2) & (np.abs(Y_img) <= slit_height / 2), 1, 0)
+
+
+# Seleccionar archivo de imagen
+# abrir un cuadro de diálogo para seleccionar la imagen
+Tk().withdraw()  # evita que aparezca la ventana principal de Tkinter
+M = filedialog.askopenfilename(
+    title="Selecciona una imagen",
+    filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")]
+)
+print(M)
+U0 = generador_u0(M, pixel_size,N)
+print(U0.shape)
+print(U0.dtype)
 
 #hallamos las coordenadas en el plano de Fourier
 fx = np.fft.fftshift(np.fft.fftfreq(N, d=pixel_size))
@@ -37,7 +84,7 @@ U0_ft = fftshift(fft2(ifftshift(U0)))
 magnitude_spectrum = 20 * np.log(1 + np.abs(U0_ft))
 
 #propagamos el campo
-kz = k*np.sqrt((1 - (walenghth**2)*((FX) ** 2 + (FY) ** 2)).astype(complex))
+kz = k*np.sqrt((1 - (walength**2)*((FX) ** 2 + (FY) ** 2)).astype(complex))
 #H = np.exp(1j * kz * z)  # Función de transferencia
 
 
@@ -74,8 +121,8 @@ U1_space = fftshift(ifft2(ifftshift(U1)))
 plt.figure(figsize=(12, 6))
 # Apertura inicial
 plt.subplot(1,5,1)
-plt.imshow(U0[256:768,256:768], cmap='gray',extent=[x_img[0]*0.25*1e6, x_img[-1]*0.25*1e6, y_img[0]*0.25*1e6, y_img[-1]*0.25*1e6])
-plt.title(f"Apertura inicial\n{slit_width*1e6:.0f} µm x {slit_height*1e6:.0f} µm")
+plt.imshow(np.abs(U0), cmap='gray',extent=[x_img[0]*0.25*1e6, x_img[-1]*0.25*1e6, y_img[0]*0.25*1e6, y_img[-1]*0.25*1e6])
+plt.title(f"Apertura inicial\n{length_side*1e6:.0f} µm x {length_side*1e6:.0f} µm")
 plt.xlabel("x [µm]")
 plt.ylabel("y [µm]")
 
@@ -102,7 +149,7 @@ plt.ylabel("y [1/µm]")
 
 # Intensidad en el espacio después de la propagación
 plt.subplot(1,5,5)
-plt.imshow(np.log(1+np.abs(U1_space[256:768,256:768])), cmap='gray',extent=[0.25*x_img[0]*1e6, 0.25*x_img[-1]*1e6, 0.25*y_img[0]*1e6, 0.25*y_img[-1]*1e6])
+plt.imshow(np.log(1+np.abs(U1_space)), cmap='gray',extent=[0.25*x_img[0]*1e6, 0.25*x_img[-1]*1e6, 0.25*y_img[0]*1e6, 0.25*y_img[-1]*1e6])
 plt.title(f"Campo en el espacio\nz={z*1e2:.1f} cm")
 plt.xlabel("x [µm]")
 plt.ylabel("y [µm]")

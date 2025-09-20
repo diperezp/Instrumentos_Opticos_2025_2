@@ -127,6 +127,42 @@ class AngularSpectrum:
 
         U1 = U0_ft * H
         return U1
+    def plot_propagation(self,z,only_propagating=True):
+        """Plot the propagation of the input image using the Angular Spectrum method.
+        Args:
+            z (float): Propagation distance in meters.
+            only_propagating (bool, optional): If True, only propagating components are considered. Defaults to True.
+        """
+        U0 = self.__image
+        U0_ft = self.fft_image()
+        magnitude_spectrum = 20 * np.log(1 + np.abs(U0_ft))
+        fx = self.__fx
+        fy = self.__fy
+        FX = self.__FX
+        FY = self.__FY
+        kz = self.__kz
+        k = self.__k
+        x_img = self.__x_img
+        y_img = self.__y_img
+        slit_width = np.max(x_img)-np.min(x_img)
+        slit_height = np.max(y_img)-np.min(y_img)
+
+        U1 = self.propagate(z,only_propagating)
+        U1_img = fftshift(np.abs(fft2(ifftshift(U1))))
+        U1_img = np.log(1 + U1_img)
+
+        plt.figure(figsize=(12, 10))
+        plt.subplot(2, 2, 1)
+        plt.imshow(U0, cmap='gray',extent=[FX[0]*1e6, FX[-1]*1e6, FY[0]*1e6, FY[-1]*1e6])
+        plt.title("Imagen de Entrada")
+        plt.xlabel("x [1/µm]")
+        plt.ylabel("y [1/µm]")
+        plt.colorbar()
+
+        plt.tight_layout()
+        plt.show()
+
+        
         
 
     

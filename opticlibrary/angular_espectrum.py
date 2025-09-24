@@ -1,4 +1,10 @@
 
+#libreria de logistica
+import cv2
+import imageio.v2
+from tkinter import filedialog
+from tkinter import Tk
+#libreria mathematicas
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft2, fftshift, ifftshift
@@ -72,6 +78,28 @@ class AngularSpectrum:
             int: Number of pixels in one dimension of the image.
         """
         return self.__N
+    def import_image(self,N):
+        """
+        Importar imagen desde el administrador de archivos
+        Returns:
+            any: Imagen importada.
+        """
+        # Seleccionar archivo de imagen
+        # abrir un cuadro de diálogo para seleccionar la imagen
+        Tk().withdraw()  # evita que aparezca la ventana principal de Tkinter
+        M = filedialog.askopenfilename(
+        title="Selecciona una imagen",
+        filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")])
+        img=M
+        #cargar imagen desde las imagenes de grises
+        img=imageio.v2.imread(self.__image, mode='F')
+        img = np.pad(img, 200, mode='constant',constant_values=255)  # Padding para evitar efectos de borde
+        img = cv2.resize(img, dsize=(self.__N,self.__N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a NxN píxeles
+        img = img / np.max(img) #normalizar la imagen para que los valores estén entre 0 y 1
+
+        u0 = img * np.exp(1j * 0)  # Asumiendo fase cero inicialmente
+        self.__image=u0
+        pass
     
     def fft_image(self):
         """Compute the Fourier Transform of the input image.
@@ -133,27 +161,17 @@ class AngularSpectrum:
             z (float): Propagation distance in meters.
             only_propagating (bool, optional): If True, only propagating components are considered. Defaults to True.
         """
-        U0 = self.__image
-        U0_ft = self.fft_image()
-        magnitude_spectrum = 20 * np.log(1 + np.abs(U0_ft))
-        fx = self.__fx
-        fy = self.__fy
-        FX = self.__FX
-        FY = self.__FY
-        kz = self.__kz
-        k = self.__k
-        x_img = self.__x_img
-        y_img = self.__y_img
-        slit_width = np.max(x_img)-np.min(x_img)
-        slit_height = np.max(y_img)-np.min(y_img)
-
         U1 = self.propagate(z,only_propagating)
         U1_img = fftshift(np.abs(fft2(ifftshift(U1))))
         U1_img = np.log(1 + U1_img)
+        print(U1_img.shape)
+        print(self.__FX.shape)
+        print(self.__FY.shape)
+
 
         plt.figure(figsize=(12, 10))
         plt.subplot(2, 2, 1)
-        plt.imshow(U0, cmap='gray',extent=[FX[0]*1e6, FX[-1]*1e6, FY[0]*1e6, FY[-1]*1e6])
+        plt.imshow(U1_img, cmap='gray',extent=[self.__FX[0]*1e6, self.__FX[-1]*1e6, self.__FY[0]*1e6, self.__FY[-1]*1e6])
         plt.title("Imagen de Entrada")
         plt.xlabel("x [1/µm]")
         plt.ylabel("y [1/µm]")

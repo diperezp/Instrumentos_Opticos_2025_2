@@ -26,6 +26,7 @@ asys=AngularSpectrum(U0,wavelngth,length_side)
 
 asys.plot_magnitude_spectrum()
 asys.plot_image()
-asys.propagate(0.1)
-asys.plot_propagation(0.1)
+asys.propagate(0.01)
+print("******")
+asys.plot_propagation(0.01,True)
 

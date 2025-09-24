@@ -11,13 +11,13 @@ from tkinter import Tk, filedialog
 walength = 633e-9  # Longitud de onda [m]
 k = 2 * np.pi / walength  # Número de onda [1/m]
 length_side= 5.8e-3 #tamaño de la imagen [m]
-N=1024  # Número de pixeles
+N=1080  # Número de pixeles
 pixel_size = length_side/N   # Tamaño del pixel [m]
 
 z_max=N*(pixel_size**2)/walength
 print(f"z_max: {z_max*1e2:.2f} cm")
 
-z = 0.1# Distancia de propagación [m]
+z = 0.05# Distancia de propagación [m]
 
 # Crear instancia de la clase AngularSpectrum
 #asys=AngularSpectrum()
@@ -39,15 +39,17 @@ def generador_u0(imagen, dx,N=1024):
     '''
     # Cargar la imagen en escala de grises
     img = imageio.v2.imread(imagen, mode='F')
-    img = np.pad(img, 200, mode='constant')  # Padding para evitar efectos de borde
-    img = cv2.resize(img, dsize=(N,N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a 1600x1600 píxeles
-    print("*******")
+    img = np.pad(img, 200, mode='constant',constant_values=255)  # Padding para evitar efectos de borde
+    img = cv2.resize(img, dsize=(N,N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a 1600x1600 píxeles 
     
     # Normalizar la imagen para que los valores estén entre 0 y 1
+    print(img[270,270])
     img = img / np.max(img)
+    
     
     # Convertir la imagen a un campo complejo (amplitud + fase)
     u0 = img * np.exp(1j * 0)  # Asumiendo fase cero inicialmente
+
     
     return u0
 

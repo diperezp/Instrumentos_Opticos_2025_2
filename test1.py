@@ -4,9 +4,9 @@ from scipy.fft import fft2, ifft2, fftshift, ifftshift
 from opticlibrary.angular_espectrum import AngularSpectrum
 
 
-wavelngth = 500e-9  # Longitud de onda [m]
-length_side=40e-6 #dimensiones de la imagen [m]
-N=1024  # Número de pixeles
+wavelngth = 633e-9  # Longitud de onda [m]
+length_side=5.8e-3 #dimensiones de la imagen [m]
+N=1080  # Número de pixeles
 
 x_image = np.linspace(-length_side / 2, length_side / 2, N)
 y_image = np.linspace(-length_side / 2, length_side / 2, N)
@@ -16,17 +16,10 @@ slit_width = 5e-6  # Ancho de la rendija [m]
 slit_height = 10e-6  # Alto de la rendija [m]
 
 U0=np.where((np.abs(x_image) <= slit_width / 2) & (np.abs(y_image) <= slit_height / 2), 1, 0)
-
-
-print(U0.shape[1])
-
-
-
 asys=AngularSpectrum(U0,wavelngth,length_side)
 
-asys.plot_magnitude_spectrum()
+asys.import_image(1080)
 asys.plot_image()
-asys.propagate(0.01)
-print("******")
-asys.plot_propagation(0.01,True)
+asys.plot_magnitude_spectrum()
+asys.plot_propagation(5e-2,True)
 

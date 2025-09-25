@@ -17,7 +17,7 @@ pixel_size = length_side/N   # Tamaño del pixel [m]
 z_max=N*(pixel_size**2)/walength
 print(f"z_max: {z_max*1e2:.2f} cm")
 
-z = 0.05# Distancia de propagación [m]
+z = 5e-2# Distancia de propagación [m]
 
 # Crear instancia de la clase AngularSpectrum
 #asys=AngularSpectrum()
@@ -160,12 +160,25 @@ plt.ylabel("y [µm]")
 plt.tight_layout()
 plt.show()
 
+
+#graficamos individualmente la difraccion
+plt.figure(figsize=(6, 5))
+plt.imshow(np.log(1+np.abs(U1_space)), cmap='gray',extent=[0.25*x_img[0]*1e6, 0.25*x_img[-1]*1e6, 0.25*y_img[0]*1e6, 0.25*y_img[-1]*1e6])
+plt.title(f"Campo en el espacio\nz={z*1e2:.1f} cm")
+plt.xlabel("x [µm]")    
+plt.ylabel("y [µm]")
+plt.colorbar(label='Log Intensity')
+plt.tight_layout()
+plt.show()
+
 #imprimimos la informacion del arreglo de la apertura
-print(f"Arreglo de la apertura: {U0.shape}")
-print(f"Valor máximo de la apertura: {U0.max()}")
-print(f"Valor mínimo de la apertura: {U0.min()}")
-print(f"Tipo de dato de la apertura: {U0.dtype}")
-print(f"Valor del pixel central: {U0[N//2, N//2]}")
-print(f"Valor del pixel en (0,0): {U0[0, 0]}")
-print(f"Valor del pixel en (N-1,N-1): {U0[N-1, N-1]}")
-print(U0)
+# print(f"Arreglo de la apertura: {U0.shape}")
+# print(f"Valor máximo de la apertura: {U0.max()}")
+# print(f"Valor mínimo de la apertura: {U0.min()}")
+# print(f"Tipo de dato de la apertura: {U0.dtype}")
+# print(f"Valor del pixel central: {U0[N//2, N//2]}")
+# print(f"Valor del pixel en (0,0): {U0[0, 0]}")
+# print(f"Valor del pixel en (N-1,N-1): {U0[N-1, N-1]}")
+# print(U0)
+
+

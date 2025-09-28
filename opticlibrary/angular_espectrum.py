@@ -95,13 +95,13 @@ class AngularSpectrum:
             int: Number of pixels in one dimension of the image.
         """
         return self.__N
-    def import_image(self,N):
+    def import_image(self,N=None):
         """
         Importar imagen desde el administrador de archivos
         Returns:
             any: Imagen importada.
         """
-        self.__N=N
+
         # Seleccionar archivo de imagen
         # abrir un cuadro de diálogo para seleccionar la imagen
         Tk().withdraw()  # evita que aparezca la ventana principal de Tkinter
@@ -111,8 +111,14 @@ class AngularSpectrum:
         img=M
         #cargar imagen desde las imagenes de grises
         img=imageio.v2.imread(M, mode='F')
-        img = np.pad(img, 200, mode='constant',constant_values=255)  # Padding para evitar efectos de borde
-        img = cv2.resize(img, dsize=(self.__N,self.__N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a NxN píxeles
+        if N is None:
+            self.__N = img.shape[0]  # Usar el tamaño original si N no se proporciona
+        else:
+            self.__N=N
+            img = cv2.resize(img, dsize=(self.__N,self.__N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a NxN píxeles
+        img = np.pad(img, self.__N//2, mode='constant',constant_values=255)
+        
+          # Padding para evitar efectos de borde
         img = img / np.max(img) #normalizar la imagen para que los valores estén entre 0 y 1
 
         u0 = img * np.exp(1j * 0)  # Asumiendo fase cero inicialmente
@@ -120,16 +126,7 @@ class AngularSpectrum:
         self.update_parameters()
         return None
     
-    def fft_image(self):
-        """Compute the Fourier Transform of the input image.
-        Returns:
-            any: Fourier Transform of the input image.
-        """
-        return fftshift(fft2(ifftshift(self.__image)))
     def plot_image(self):
-        print(self.__image.shape)
-        print(self.__y_img.shape)
-        print("@@@@")
         """Plot the input image."""
         plt.figure(figsize=(12, 10))
         plt.imshow(np.abs(self.__image), cmap='gray',extent=[self.__x_img[0]*1e6, self.__x_img[-1]*1e6, self.__y_img[0]*1e6, self.__y_img[-1]*1e6])
@@ -140,9 +137,16 @@ class AngularSpectrum:
         plt.show()
         return self.__image
     
+    def fft_image(self):
+        """Compute the Fourier Transform of the input image.
+        Returns:
+            any: Fourier Transform of the input image.
+        """
+        return fftshift(fft2(self.__image))
+    
     def plot_magnitude_spectrum(self):
         """Plot the magnitude spectrum of the Fourier Transform of the input image."""
-        U0_ft = self.fft_image()
+        U0_ft = np.fft.fftshift(self.fft_image())
         magnitude_spectrum = 20 * np.log(1 + np.abs(U0_ft))
         plt.figure(figsize=(12, 10))
         plt.imshow(magnitude_spectrum, cmap='gray',extent=[self.__fx[0]*1e-6, self.__fx[-1]*1e-6, self.__fy[0]*1e-6, self.__fy[-1]*1e-6])
@@ -165,10 +169,10 @@ class AngularSpectrum:
         if only_propagating:
             prop_mask = ((2*np.pi*self.__FX)**2 + (2*np.pi*self.__FY)**2) <= self.__k**2
             H = np.zeros_like(self.__kz, dtype=complex)
+            print(f"Dimensiones de kz:{self.__kz.shape}")
             # sqrt para mask (ya es seguro porque mask selecciona positivos)
             kz_prop = np.sqrt(self.__k**2 - (2*np.pi*self.__FX[prop_mask])**2 - (2*np.pi*self.__FY[prop_mask])**2)
             H[prop_mask] = np.exp(1j * kz_prop * z)
-            print("Componentes evanescentes eliminados")
         else:
             H = np.exp(1j * self.__kz * z)
             # opcional: truncar componentes con decaimiento numéricamente irrelevante
@@ -187,8 +191,6 @@ class AngularSpectrum:
         U1 = self.propagate_spectral(z,only_propagating)
         U1=np.abs(U1)
         U1_img = np.log(1 + U1)
-        print(U1_img.shape)
-        print("**"*5)
 
 
         plt.figure(figsize=(12, 10))
@@ -209,7 +211,7 @@ class AngularSpectrum:
             any: Propagated image in the spatial domain.
         """
         U1 = self.propagate_spectral(z,only_propagating)
-        U1_space = fftshift(ifft2(ifftshift(U1)))   
+        U1_space = fftshift(ifft2(U1))
         return U1_space
     def plot_propagation(self,z,only_propagating=True):
         """Plot the propagation of the input image using the Angular Spectrum method.
@@ -220,9 +222,6 @@ class AngularSpectrum:
         U1 = self.get_propagation(z,only_propagating)
         U1=np.abs(U1)
         U1_img = np.log(1 + U1)
-        print(U1_img.shape)
-        print("**"*5)
-
 
         plt.figure(figsize=(12, 10))
         plt.imshow(U1_img, cmap='gray',extent=[self.__x_img[0]*1e6, self.__x_img[-1]*1e6, self.__y_img[0]*1e6, self.__y_img[-1]*1e6])
@@ -233,35 +232,9 @@ class AngularSpectrum:
 
         plt.tight_layout()
         plt.show()
-    def aS_Inverse(self,z,only_propagating=True):
-        """Inverse propagation using the Angular Spectrum method.
-        Args:
-            U1_ft (any): Fourier Transform of the propagated image.
-            z (float): Propagation distance in meters.
-            only_propagating (bool, optional): If True, only propagating components are considered. Defaults to True.
-        Returns:
-            any: Inversely propagated image in the spatial domain.
-        """
-        ##Calculamos la transformada de Fourier para la imagen difractada
-        U1_ftt = np.fftshift(fft2(ifftshift(self.__Difraccion)))
-        #dividimos por la funcion de transferencia
-        if only_propagating:
-            prop_mask = ((2*np.pi*self.__FX)**2 + (2*np.pi*self.__FY)**2) <= self.__k**2
-            H = np.zeros_like(self.__kz, dtype=complex)
-            # sqrt para mask (ya es seguro porque mask selecciona positivos)
-            kz_prop = np.sqrt(self.__k**2 - (2*np.pi*self.__FX[prop_mask])**2 - (2*np.pi*self.__FY[prop_mask])**2)
-            H[prop_mask] = np.exp(-1j * kz_prop * z)
-            print("Componentes evanescentes eliminados")
-        else:
-            H = np.exp(-1j * self.__kz * z)
-            # opcional: truncar componentes con decaimiento numéricamente irrelevante
-            alpha = np.maximum(0, np.imag(self.__kz))  # alpha >= 0 for evanescent parts
-            too_small = np.exp(-alpha * z) < 1e-12
-            H[too_small] = 0
 
-        U0_ft = U1_ft * H
-        U0_space = fftshift(ifft2(ifftshift(U0_ft)))   
-        return U0_space
+        
+
 
         
         

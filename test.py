@@ -12,9 +12,9 @@ walength = 633e-9  # Longitud de onda [m]
 k = 2 * np.pi / walength  # Número de onda [1/m]
 length_side= 5.8e-3 #tamaño de la imagen [m]
 N=1080  # Número de pixeles
-pixel_size = length_side/N   # Tamaño del pixel [m]
+pixel_size = length_side/(2*N)   # Tamaño del pixel [m]
 
-z_max=N*(pixel_size**2)/walength
+z_max=2*N*(pixel_size**2)/walength
 print(f"z_max: {z_max*1e2:.2f} cm")
 
 z = 5e-2# Distancia de propagación [m]
@@ -43,7 +43,6 @@ def generador_u0(imagen, dx,N=1024):
     img = cv2.resize(img, dsize=(N,N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a 1600x1600 píxeles 
     
     # Normalizar la imagen para que los valores estén entre 0 y 1
-    print(img[270,270])
     img = img / np.max(img)
     
     

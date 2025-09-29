@@ -110,7 +110,8 @@ class AngularSpectrum:
         filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")])
         img=M
         #cargar imagen desde las imagenes de grises
-        img=imageio.v2.imread(M, mode='F')
+        img=cv2.imread(M,cv2.IMREAD_UNCHANGED)
+        img=img[:,:,0]
         if N is None:
             self.__N = img.shape[0]  # Usar el tamaño original si N no se proporciona
         else:
@@ -142,11 +143,11 @@ class AngularSpectrum:
         Returns:
             any: Fourier Transform of the input image.
         """
-        return fftshift(fft2(self.__image))
+        return fft2(self.__image)
     
     def plot_magnitude_spectrum(self):
         """Plot the magnitude spectrum of the Fourier Transform of the input image."""
-        U0_ft = np.fft.fftshift(self.fft_image())
+        U0_ft = fftshift(self.fft_image())
         magnitude_spectrum = 20 * np.log(1 + np.abs(U0_ft))
         plt.figure(figsize=(12, 10))
         plt.imshow(magnitude_spectrum, cmap='gray',extent=[self.__fx[0]*1e-6, self.__fx[-1]*1e-6, self.__fy[0]*1e-6, self.__fy[-1]*1e-6])
@@ -188,7 +189,7 @@ class AngularSpectrum:
             z (float): Propagation distance in meters.
             only_propagating (bool, optional): If True, only propagating components are considered. Defaults to True.
         """
-        U1 = self.propagate_spectral(z,only_propagating)
+        U1 = fftshift(self.propagate_spectral(z,only_propagating))
         U1=np.abs(U1)
         U1_img = np.log(1 + U1)
 

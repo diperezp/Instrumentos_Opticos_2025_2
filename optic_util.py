@@ -21,9 +21,6 @@ def import_image(N):
         print(f"Archivo seleccionado: {M}")
         #cargar imagen desde las imagenes de grises
         img=cv2.imread(M,cv2.IMREAD_UNCHANGED)
-        print("Imagen cargada:")
-        print(img.dtype)
-        print(img.shape)
         img=img[:, :, 0]  # Convertir a escala de grises si es una imagen RGB
         img = img / np.max(img) #normalizar la imagen para que los valores estén entre 0 y 1
         return img

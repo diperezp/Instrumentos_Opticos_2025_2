@@ -3,14 +3,12 @@ import matplotlib.pyplot as plt
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
 from test2 import fft2c, ifft2c
 class BackpropagationAngularSpectrum:
-    def __init__(self, espectrum_magnitude, spectrum_phase, z, side_length, wavelength):
+    def __init__(self,angular_spectrum, z, side_length, wavelength):
         #variables de analisis
-        self.__espectrum_magnitude = espectrum_magnitude
-        self.__espectrum_phase = spectrum_phase
         self.__z = z
         self.__side_length = side_length
         self.__wavelength = wavelength
-        self.__angular_spectrum = self.__espectrum_magnitude * np.exp(1j * self.__espectrum_phase)
+        self.__angular_spectrum = angular_spectrum
 
         #variable globales
         self.__N=self.__angular_spectrum.shape[0]
@@ -61,19 +59,25 @@ class BackpropagationAngularSpectrum:
     
 
 class metodo_gerchberg_saxton:
-    def __init__(self, espectrum_magnitude, num_iters=500):
+    def __init__(self, espectrum_magnitude, num_iters,z ,wavelenght,side_length):
         self.__espectrum_magnitude = espectrum_magnitude
         self.__num_iters = num_iters
+        self.__z=z
+        self.__wavelenght=wavelenght
+        self.__side_length=side_length
+        self.__
 
     def reconstruct(self):
         M = self.__espectrum_magnitude
         # init: random phase
         phi = np.exp(1j * 2*np.pi*np.random.rand(*M.shape))
         F_est = M * phi
+        #instanciamos la clase backpropagation
+        bpas=BackpropagationAngularSpectrum(F_est,phi,self.__z,self.__side_length,self.__wavelenght)
 
         errors = []
         for k in range(self.__num_iters):
-            img = np.real(ifft2c(F_est))  # imagen espacial (se asume real)
+              # imagen espacial (se asume real)
             #aplicamos las restricciones 
             img = np.clip(img, 0, None)  # no negatividad  
             F_est = fft2c(img)

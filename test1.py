@@ -30,7 +30,7 @@ asys.plot_image()   #mostramos la transmittancia
 img=asys.get_propagation(5e-2) #propagamos a 5 cm
 # print(img.shape)
 # #mostramos la imagen propagada
-asys.plot_propagation_spectral(5e-2,True)
+asys.plot_propagation(5e-2,True)
 plot_image(np.abs(img), title='Campo propagado a 5 mm', cmap_type='gray')
 
 
@@ -43,10 +43,12 @@ esperctrum_phase=np.angle(img)
 print(f"Dimensión del espectro de fase: {esperctrum_phase.shape}")
 plot_image(esperctrum_phase, title='Espectro de fase', cmap_type='gray')
 
+angular_spectrum=esperctrum_magnitude*np.exp(1j*esperctrum_phase)
+
 
 
 #instanciamos la clase de backpropagation
-bpas=BackpropagationAngularSpectrum(esperctrum_magnitude,esperctrum_phase,5e-2,length_side,wavelngth)
+bpas=BackpropagationAngularSpectrum(angular_spectrum,5e-2,length_side,wavelngth)
 
 
 #calculamos la transmitancia
@@ -54,5 +56,6 @@ transmittance=bpas.compute_transmittance(True)
 print(f"Dimensión de la transmitancia: {transmittance.shape}")
 #mostramos la transmitancia
 plot_image(np.abs(transmittance), title='Transmitancia reconstruida', cmap_type='gray')
+plot_image(np.angle(transmittance),title="Espectro de phase reconstruida", cmap_type='gray')
 
 

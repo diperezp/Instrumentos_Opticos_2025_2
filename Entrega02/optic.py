@@ -2,9 +2,13 @@ import numpy as np
 from tkinter import Tk, filedialog
 import cv2
 from matplotlib import pyplot as plt
+from typing import Tuple
 #importamos la librerias necesarias para hacer transformadas de Fresnel
 from scipy.fft import fft2, ifft2, fftshift
 from scipy.fftpack import fftfreq
+#librerias privadas
+from scale import *
+from utilopctic import *
 
 
 
@@ -77,8 +81,14 @@ class ProcesamientoOptico():
         if value <= 0:
             raise ValueError("pixel_size debe ser mayor que 0.")
         self.__pixel_size = float(value)
+    def get_transmitance(self):
+        """Devuelve la transmitancia almacenada."""
+        return self.__transmitance
+    def get_field_propagated(self):
+        """Devuelve el campo óptico propagado almacenado."""
+        return self.__field_propagated
     
-    def import_transmitance(self,N=None):
+    def import_transmitance(self,new_shape=Tuple[int,int],value_pad:int=255):
         """
         Abre un diálogo de selección de archivo para cargar una imagen de transmitancia, la procesa y la almacena como un campo complejo en self.__image.
         Descripción
@@ -106,74 +116,27 @@ class ProcesamientoOptico():
         - El padding usa constant_values=255 (se asume fondo blanco).
         - Actualmente no hay comprobaciones explícitas si el usuario cancela (ruta vacía) o si cv2.imread devuelve None; se recomienda añadir validación para evitar errores al indexar la imagen.
         """
-        # Seleccionar archivo de imagen
-        # abrir un cuadro de diálogo para seleccionar la imagen
-        Tk().withdraw()  # evita que aparezca la ventana principal de Tkinter
-        ruta = filedialog.askopenfilename(
-        title="Selecciona una imagen",
-        filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")])
-        #cargar imagen desde las imagenes de grises
-        img=cv2.imread(ruta,cv2.IMREAD_UNCHANGED)
-        img=img[:,:,0]
-        if N is None:
-            N = img.shape[0]  # Usar el tamaño original si N no se proporciona
-        else:
-            img = cv2.resize(img, dsize=(N,N), interpolation=cv2.INTER_CUBIC) # Redimensionar la imagen a NxN píxeles
-        img = np.pad(img, N//2, mode='constant',constant_values=255)
-        
-        # Padding para evitar efectos de borde
-        img = img / np.max(img) #normalizar la imagen para que los valores estén entre 0 y 1
-
-        u0 = img * np.exp(1j * 0)  # Asumiendo fase cero inicialmente
-        self.__transmitance=u0
+        # llamamos la funcion import_image 
+        img= import_image()[:,:,0]
+        #redimensionamos la imagen si es necesario
+        if new_shape is not None:
+            img= resize_with_pad(img,new_shape,pad_value=value_pad)
+        #almacenamos la transmitancia como un campo complejo
+        self.__transmitance= img * np.exp(1j*0)
+        #normalizamos la transmitancia
+        self.__transmitance= self.__transmitance/np.max(self.__transmitance)
         return self.__transmitance
     
     def show_transmitance(self):
         """
         Mostrar la transmitancia almacenada en self.__transmitance usando matplotlib.
-        Soporta:
-          - escalar: muestra una imagen constante del tamaño de __N (si existe) o 256x256.
-          - ndarray: muestra el array (si es complejo, muestra su magnitud).
-          - callable: evalúa la función sobre una malla centrada usando __N y pixel_size si están definidos.
         """
-
         if self.__transmitance is None:
             raise ValueError("No hay ninguna transmitance asignada para mostrar.")
+        image=np.abs(self.__transmitance)
+        X,Y=mesh_image(image,self.__pixel_size,self.__pixel_size)
+        plot_image(image,X,Y)
 
-        t = self.__transmitance
-
-        # Determinar tamaño de muestreo
-        try:
-            N = int(self.__N)
-        except Exception:
-            N = 256
-        
-        #creamos la malla de coordenadas centrada
-        x = (np.arange(N) - N//2) * self.__pixel_size
-        y = (np.arange(N) - N//2) * self.__pixel_size
-        X, Y = np.meshgrid(x, y)
-
-
-        
-
-        # Si es complejo, mostrar magnitud
-        if np.iscomplexobj(t):
-            t = np.abs(t)
-
-        # Normalizar visualización opcionalmente para mejorar contraste si valores fuera de [0,1]
-        # (no modificar los datos)
-        vmin = None
-        vmax = None
-
-        plt.figure()
-        plt.imshow(t, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
-        plt.colorbar(label='Transmitancia')
-        plt.title('Transmitancia')
-        plt.xlabel('x (pix)')
-        plt.ylabel('y (pix)')
-        plt.tight_layout()
-        plt.show()
-    
     def propagate(self, z=0,mode='fresnel'):
         """
         Propaga el campo óptico a una distancia z utilizando la Transformada de Fresnel.
@@ -191,12 +154,11 @@ class ProcesamientoOptico():
             raise ValueError("Modo no reconocido. Actualmente solo 'fresnel' está implementado.")
         
         #creamos la malla de coordenadas centrada
-        N = self.__transmitance.shape[0]
-        x = (np.arange(N) - N//2) * self.__pixel_size
-        y = (np.arange(N) - N//2) * self.__pixel_size
-        X, Y = np.meshgrid(x, y)
+        N_x = self.__transmitance.shape[0]
+        N_y = self.__transmitance.shape[1]
+        X,Y=mesh_image(self.__transmitance,self.__pixel_size,self.__pixel_size)
 
-        # Creamos la malla en el espacio de frecuencias
+        # valores necesarios para la propagación de Fresnel
         dx = self.__pixel_size
         k = 2 * np.pi / self.__length_wave  # número de onda
         u0 = self.__transmitance  # campo de entrada
@@ -204,11 +166,40 @@ class ProcesamientoOptico():
         u1 = u0 * np.exp(1j * (k / (2 * z)) * (X**2 + Y**2))
         # Transformada de Fourier del campo con fase esférica
         U2 = fftshift(fft2(fftshift(u1))) * (dx**2)
-        # Escalar el resultado de la Transformada de Fresnel
-        Kernel_escalamiento = (np.exp(1j * k * z) / (1j * self.__length_wave * z)) * np.exp(1j * (np.pi * self.__length_wave * z) * (X**2 + Y**2) / (self.__length_wave * z)**2)
-        u3 = U2 * Kernel_escalamiento
 
-        self.__field_propagated = u3
+        #calculamos el tamaño del pixel en el plano de fresnel
+        pixel_size_fresnel = self.__length_wave * z / (N_x * self.__pixel_size)
+        
+        #creamos la malla en el plano de fresnel
+        X_f,Y_f=mesh_image(U2,pixel_size_fresnel,pixel_size_fresnel)
+        
+        # Aplicar el factor de transferencia de Fresnel
+        H = np.exp(1j * (k / (2 * z)) * (X_f**2 + Y_f**2))
+        U3 = H * U2
+
+        #actualizamos los valores de las dimensiones de los pixeles
+        self.__pixel_size=pixel_size_fresnel
+        
+        self.__field_propagated = U3
+    def lens(self, focal_length):
+        """
+        Simula el paso del campo óptico por una lente delgada con distancia focal dada.
+        
+        Parámetros
+        ----------
+        focal_length : float
+            Distancia focal de la lente en metros.
+        """
+        if self.__field_propagated is None:
+            raise ValueError("No hay ningún campo propagado para aplicar la lente. Realice una propagación primero.")
+        
+        k = 2 * np.pi / self.__length_wave  # número de onda
+        N = self.__field_propagated.shape[0]
+        X, Y = mesh_image(self.__field_propagated, self.__pixel_size, self.__pixel_size)
+
+        # Aplicar la fase de la lente delgada
+        lens_phase = np.exp(-1j * (k / (2*focal_length)) * (X**2 + Y**2))
+        self.__field_propagated *= lens_phase
     
     def show_propagated_field(self):
         """
@@ -266,11 +257,12 @@ def import_image_example(N=None):
     # abrir un cuadro de diálogo para seleccionar la imagen
     Tk().withdraw()  # evita que aparezca la ventana principal de Tkinter
     ruta = filedialog.askopenfilename(
-title="Selecciona una imagen",
-filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")])
+    title="Selecciona una imagen",
+    filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")]
+    )
     #cargar imagen desde las imagenes de grises
     img=cv2.imread(ruta,cv2.IMREAD_UNCHANGED)
-    img=img[:,:,0]
+    img=img[:,:]
     if N is None:
         N = img.shape[0]  # Usar el tamaño original si N no se proporciona
     else:

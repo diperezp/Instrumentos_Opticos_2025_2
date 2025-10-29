@@ -1,5 +1,6 @@
 from optic import ProcesamientoOptico
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 #longitud de onda y tamaño de píxel para las pruebas
@@ -26,7 +27,9 @@ optical_processor.show_propagated_field()
 field_propagated = optical_processor.get_field_propagated()
 #mostramos el campo propagado con matplotlib para verificar
 plt.imshow(np.angle(field_propagated), cmap='gray')
-plt.title(  'fase adquiridada (Fre'snel) ')             
+plt.title('fase adquiridada (Fresnel)')
+plt.colorbar()
+plt.show()
 
 
 image=optical_processor.get_transmitance()

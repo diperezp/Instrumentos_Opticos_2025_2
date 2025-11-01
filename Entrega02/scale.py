@@ -1,16 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.ndimage import zoom
 from typing import Tuple
 import cv2
 
+
 def mesh_image(image, delta_x, delta_y):
     """
-    Esta funcion devulve la grilla relacionada """
-   
-
+    Esta funcion devulve la grilla relacionada 
+    """
     rows, cols = image.shape
-    x = np.linspace(-delta_x*cols/2, cols * delta_x/2, cols)
-    y = np.linspace(-delta_y*rows/2, rows * delta_y/2, rows)
+    x = np.arange(-cols/2, cols/2) * delta_x
+    y = np.arange(-rows/2, rows/2) * delta_y
     X, Y = np.meshgrid(x, y)
     return X, Y
 
@@ -44,3 +45,27 @@ def resize_with_pad(image:np.ndarray,new_size:Tuple[int,int],pad_value:int=255)-
     padded_image = cv2.copyMakeBorder(image, pad_height, pad_height, pad_width, pad_width, cv2.BORDER_CONSTANT, value=pad_value)
 
     return padded_image
+def resize_with_pad_complex(image)->np.ndarray:
+   """
+   Esta funcion redimensiona una imagen de datos complex
+   image:funcion compleja
+   new_size: nuevas dimensiones
+   pad_value: color del padding
+   
+   return
+   image_padding_complex
+   """
+   #extraemos la dimension de la imagen la cual se supone cuadrada
+   N=image.shape[0]
+
+   #hacemos el zoom de la imagen, esto elimina informacion de la imagen 
+   imagen=zoom(image,zoom=0.5,order=3) #esta funcion 
+
+   #luego hacemos padding
+   pad=N/4
+   imagen=np.pad(imagen,((4,4),(4,4)),'constant')
+   imagen_padding_complex=imagen
+   return imagen
+   
+
+

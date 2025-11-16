@@ -1,5 +1,6 @@
 from optic import ProcesamientoOptico
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 #longitud de onda y tamaño de píxel para las pruebas
@@ -25,7 +26,7 @@ optical_processor.show_propagated_field()
 
 
 #mostramos image con matplotlib para verificar
-plt.imshow(abs(image), cmap='gray')
+plt.imshow(np.log(1+np.abs(image)), cmap='gray')
 plt.title('Transmitancia Importada')
 plt.colorbar()
 plt.show()

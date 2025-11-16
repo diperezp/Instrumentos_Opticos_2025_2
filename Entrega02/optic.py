@@ -270,7 +270,7 @@ title="Selecciona una imagen",
 filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")])
     #cargar imagen desde las imagenes de grises
     img=cv2.imread(ruta,cv2.IMREAD_UNCHANGED)
-    img=img[:,:,0]
+    img=img[:,:]
     if N is None:
         N = img.shape[0]  # Usar el tamaño original si N no se proporciona
     else:

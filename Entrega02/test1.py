@@ -10,23 +10,31 @@ pixel_size_test = 10e-6  # 10 micrómetros
 #instanciamos la clase ProcesamientoOptico
 optical_processor = ProcesamientoOptico(length_wave=lambda_test, pixel_size=pixel_size_test)
 
-#importamos una imagen del directorio actual
-image=optical_processor.import_transmitance(878)
-
-print("Dimensiones de la transmitancia importada:", image.shape)
-
-#mostramos la transmitancia importada
+#cargamos la imagen del objeto
+optical_processor.import_transmitance((1024,1024),255)
+#mostramos la transmitancia
 optical_processor.show_transmitance()
-
-#realizamos la propagación de Fresnel a una distancia z=0.1 m
-z_propagation = 0.1  # 0.1 metros
-optical_processor.propagate(z=z_propagation, mode='fresnel')
+#z de propagacion
+z=0.8 #1 cm
+optical_processor.propagate(z)
+#mostramos el campo
 optical_processor.show_propagated_field()
 
+#ahora pasamos el campo atravez de una lente de foco
+f=0.2
+optical_processor.lens(f)
+
+#ahora propagamos el campo hasta el foco
+optical_processor.propagate(4/15)
+
+#mostramos el campo
+optical_processor.show_propagated_field()
 
 
 #mostramos image con matplotlib para verificar
 plt.imshow(np.log(1+np.abs(image)), cmap='gray')
 plt.title('Transmitancia Importada')
 plt.colorbar()
+
+
 plt.show()

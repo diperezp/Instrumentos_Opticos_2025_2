@@ -3,15 +3,15 @@
 #
 # Práctica 3 – Microscopía Óptica
 # Punto 2: Simulación difractiva de un microscopio compuesto
-#          usando formalismo ABCD + Fresnel
 #
-# - Modelo coherente de un microscopio 20x/0.5 con lente de tubo de 200 mm
+# AHORA USANDO LA FUNCIÓN DE TRANSFERENCIA COHERENTE DEL PUNTO 1:
+# U_img(x,y) = FT^{-1}{ H(fx,fy) * FT{U_obj(x,y)} }
+# con H(fx,fy) = pupila circular de radio f_c = NA / λ
+#
 # - Objeto: imagen del test de resolución USAF 1951 (cargada por el usuario)
-# - Sistema equivalente 4f (objetivo + lente de tubo)
-# - Pupila circular que emula la NA del objetivo (NA = 0.5)
-# - Cálculo del límite de Abbe y visualización de la imagen simulada
-#
-# *** CÓDIGO ESPECÍFICO DEL PUNTO 2 DE LA PRÁCTICA 3 ***
+# - Se usa el tamaño de píxel del sensor y el aumento para definir el muestreo
+#   en el plano objeto.
+# - Se calcula el límite de Abbe y se visualiza la imagen simulada.
 # ==============================================================
 
 from __future__ import annotations
@@ -57,24 +57,21 @@ print(f"Frecuencia máxima (f_c): {F_C_COHERENTE/1e3:.2f} líneas/mm")
 print(f"Resolución de Abbe (d_Abbe): {D_ABBE*1e6:.3f} μm")
 print("--------------------------------------------------\n")
 
-# Configuración general usada en la simulación del Punto 2
+# Configuración general usada en la simulación del Punto 3
 CONFIG = {
     # Longitud de onda
     "lambda_0": LAMBDA_0,
 
-    # Focales de objetivo y lente de tubo
+    # Focales de objetivo y lente de tubo (se mantienen por referencia)
     "f_lente_1": F_MO,    # Objetivo
     "f_lente_2": F_TL,    # Lente de tubo
 
     # Sensor (dimensiones y tamaño de píxel)
-    # Aquí se modela el sensor físico de la cámara.
     "px_cols": 2448,
     "px_rows": 2048,
-    "pitch": 3.45e-6,     # [m] tamaño de píxel
+    "pitch": 3.45e-6,     # [m] tamaño de píxel en el sensor
 
-    # Tipo de filtro en el plano de Fourier
-    # Para el Punto 3, solo se aplica la pupila circular (NA),
-    # por eso el filtro adicional es "ninguno".
+    # Tipo de filtro en el plano de Fourier adicional (a la pupila)
     "tipo_filtro": "ninguno",
 
     # Diámetro físico de la pupila (controlado por la NA del objetivo)
@@ -92,12 +89,10 @@ CONFIG = {
 
 # ==============================================================
 # 2. UTILIDADES BÁSICAS
-#    (Selección de imagen USAF, redimensionado, malla y ploteo)
 # ==============================================================
 
 def seleccionar_imagen_en_grises(inicio_en_escritorio: bool = True) -> np.ndarray:
     """
-    Punto 3 – Práctica 3:
     Abre un diálogo para seleccionar la imagen del test de resolución (USAF 1951).
     Devuelve una matriz en escala de grises normalizada a [0,1].
     """
@@ -169,25 +164,18 @@ def mostrar_intensidad(campo: np.ndarray, Lx: float, Ly: float, titulo: str,
     plt.show()
 
 # ==============================================================
-# 3. MUESTREO DE FRESNEL (ABCD) – Punto 2
+# 3–6. UTILIDADES ABCD / FRESNEL
+# (Se mantienen, pero ya no se usan en main)
 # ==============================================================
 
 def muestreo_entrada_para_Fresnel(Nx: int, Lx_out: float, B: float, lambda_0: float,
                                   Ny: int, Ly_out: float) -> tuple[float, float, float, float]:
-    """
-    Calcula el muestreo requerido en el plano de ENTRADA dado el tamaño del
-    plano de SALIDA para una propagación tipo Fresnel asociada al término B
-    de la matriz ABCD (Punto 3, Práctica 3).
-    """
     dx_out, dy_out = Lx_out / Nx, Ly_out / Ny
     dx_in = (lambda_0 * B) / (Nx * dx_out)
     dy_in = (lambda_0 * B) / (Ny * dy_out)
     Lx_in, Ly_in = dx_in * Nx, dy_in * Ny
     return dx_in, dy_in, Lx_in, Ly_in
 
-# ==============================================================
-# 4. FILTROS EN EL PLANO DE FOURIER (Pupila del objetivo)
-# ==============================================================
 
 def mascara_circular(xx: np.ndarray, yy: np.ndarray, radio: float) -> np.ndarray:
     """Máscara binaria circular centrada (1 dentro del disco, 0 fuera)."""
@@ -201,13 +189,12 @@ def mascara_rendija_central(xx: np.ndarray, ancho: float) -> np.ndarray:
 
 def filtro_plano_fourier(xx: np.ndarray, yy: np.ndarray, cfg: dict) -> np.ndarray:
     """
-    Devuelve el filtro en el plano de Fourier según CONFIG['tipo_filtro'].
-    En el Punto 3 se usa 'ninguno' y la pupila real está dada por 'diam_apertura'.
+    Filtro adicional en el plano de Fourier.
+    En este punto 3 se deja como 'ninguno' (no se usa, pero se mantiene).
     """
     tipo = cfg["tipo_filtro"]
 
     if tipo == "ninguno":
-        # Filtro de paso total; la limitación está dada solo por el diafragma circular.
         return 1.0
 
     if tipo == "circular":
@@ -236,39 +223,25 @@ def filtro_plano_fourier(xx: np.ndarray, yy: np.ndarray, cfg: dict) -> np.ndarra
 
     raise ValueError("tipo_filtro no reconocido.")
 
-# ==============================================================
-# 5. FORMALISMO ABCD (Matrices del sistema) – Punto 2
-# ==============================================================
 
 @dataclass
 class SistemaABCD:
-    """
-    Contenedor para una cadena de elementos ABCD y metadatos.
-    Usado en el Punto 3 para describir los tramos:
-    Objeto → Pupila y Pupila → Sensor.
-    """
-    M: np.ndarray           # Matriz 2x2 del sistema completo
-    B_total: float          # Término B neto (m)
-    camino_optico: float    # z efectivo para la fase global
+    M: np.ndarray
+    B_total: float
+    camino_optico: float
 
 
 def T(d: float, n: float = 1.0) -> np.ndarray:
-    """Traslación en un medio de índice n: matriz [[1, d/n],[0,1]]."""
     return np.array([[1.0, d/n],
                      [0.0, 1.0]], dtype=float)
 
 
 def L(f: float) -> np.ndarray:
-    """Lente delgada de focal f: matriz [[1,0],[-1/f,1]]."""
     return np.array([[1.0, 0.0],
                      [-1.0/f, 1.0]], dtype=float)
 
 
 def encadenar_elementos(elementos: list[np.ndarray]) -> SistemaABCD:
-    """
-    Multiplica las matrices ABCD en orden de propagación y acumula el término B.
-    Se usa en la simulación del Punto 3 para construir los brazos anterior y posterior.
-    """
     Msys = np.eye(2)
     B_total = 0.0
     for E in elementos:
@@ -276,36 +249,25 @@ def encadenar_elementos(elementos: list[np.ndarray]) -> SistemaABCD:
         B_total += E[0, 1]
     return SistemaABCD(M=Msys, B_total=B_total, camino_optico=B_total)
 
-# ==============================================================
-# 6. PROPAGACIÓN DE FRESNEL USANDO ABCD – Punto 2
-# ==============================================================
 
 def propagar_Fresnel_ABCD(objeto: np.ndarray, sistema: SistemaABCD,
                           Lx_out: float, Ly_out: float, lambda_0: float) -> tuple[np.ndarray, float, float]:
-    """
-    Propagación escalar de Fresnel usando la forma de Collins (ABCD) discreta.
-    Devuelve el campo en el plano de salida y los tamaños físicos Lx_out, Ly_out.
-    Esta rutina se usa tanto para Objeto→Pupila como para Pupila→Sensor.
-    """
     Ny, Nx = objeto.shape
     A, B, C, D = sistema.M[0, 0], sistema.M[0, 1], sistema.M[1, 0], sistema.M[1, 1]
     k = 2 * np.pi / lambda_0
 
-    # Muestreo requerido en ENTRADA para obtener la ventana Lx_out × Ly_out en SALIDA.
+    dx_out, dy_out = Lx_out / Nx, Ly_out / Ny
     dx_in, dy_in, Lx_in, Ly_in = muestreo_entrada_para_Fresnel(
         Nx, Lx_out, B, lambda_0, Ny, Ly_out
     )
 
-    # Mallas de entrada y salida
     xx_in, yy_in = malla_cartesiana(Nx, Lx_in, Ny, Ly_in)
     xx_out, yy_out = malla_cartesiana(Nx, Lx_out, Ny, Ly_out)
 
-    # Fases cuadráticas asociadas al sistema ABCD
     fase_const = np.exp(1j * k * sistema.camino_optico)
     fase_in = np.exp(1j * k * (A/(2*B)) * (xx_in**2 + yy_in**2))
     fase_out = np.exp(1j * k * (D/(2*B)) * (xx_out**2 + yy_out**2))
 
-    # Transformada de Fresnel (implementada con FFT2)
     campo_out = (
         fase_const * fase_out *
         np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(objeto * fase_in))) *
@@ -315,96 +277,72 @@ def propagar_Fresnel_ABCD(objeto: np.ndarray, sistema: SistemaABCD,
     return campo_out, Lx_out, Ly_out
 
 # ==============================================================
-# 7. RUTINA PRINCIPAL (Punto 2 – Formación de imagen USAF)
+# 7. RUTINA PRINCIPAL USANDO LA FUNCIÓN DE TRANSFERENCIA (Punto 1)
 # ==============================================================
 
 def main():
-    # 7.1 Parámetros físicos del sensor
+    # 7.1 Parámetros del sensor y del plano objeto
     nx, ny = CONFIG["px_cols"], CONFIG["px_rows"]
     pitch = CONFIG["pitch"]
-    Lx_sensor, Ly_sensor = nx * pitch, ny * pitch  # tamaño físico del sensor
+    lambda_0 = CONFIG["lambda_0"]
+
+    # Tamaño efectivo de píxel en el plano objeto (aumento M_OBJ)
+    dx_obj = pitch / M_OBJ
+    dy_obj = pitch / M_OBJ
+    Lx_obj = nx * dx_obj
+    Ly_obj = ny * dy_obj
 
     # 7.2 Selección y preparación del objeto (Test USAF 1951)
     objeto = seleccionar_imagen_en_grises(inicio_en_escritorio=True)
     objeto = redimensionar_con_padding(objeto, nx, ny)
 
-    # 7.3 Definición de los sistemas 4f (objetivo + lente de tubo)
-    f1, f2 = CONFIG["f_lente_1"], CONFIG["f_lente_2"]
+    # 7.3 Malla en el plano objeto (solo para ejes físicos de la figura)
+    xx_obj, yy_obj = malla_cartesiana(nx, Lx_obj, ny, Ly_obj)
 
-    # Brazo anterior: Objeto --f1--> L_MO --f1--> plano de Fourier/pupila
-    sistema_anterior = encadenar_elementos([T(f1), L(f1), T(f1)])
+    # 7.4 Malla de frecuencias espaciales en el plano objeto
+    #     (fx, fy en ciclos/m)
+    fx = np.fft.fftfreq(nx, d=dx_obj)
+    fy = np.fft.fftfreq(ny, d=dy_obj)
+    FX, FY = np.meshgrid(fx, fy)
 
-    # Brazo posterior: plano de Fourier --f2--> L_TL --f2--> sensor
-    sistema_posterior = encadenar_elementos([T(f2), L(f2), T(f2)])
+    # 7.5 FUNCIÓN DE TRANSFERENCIA COHERENTE DEL PUNTO 1
+    #     H(fx,fy) = 1 dentro del círculo |f| <= NA/λ, 0 fuera.
+    f_c = F_C_COHERENTE  # frecuencia de corte (NA/λ)
+    H = (np.sqrt(FX**2 + FY**2) <= f_c).astype(np.complex128)
 
-    # 7.4 Ventanas físicas y muestreo del plano de Fourier
-    _, _, Lx_fourier, Ly_fourier = muestreo_entrada_para_Fresnel(
-        nx, Lx_sensor, sistema_posterior.B_total, CONFIG["lambda_0"], ny, Ly_sensor
-    )
+    # 7.6 FORMACIÓN DE IMAGEN: U_img = FT^{-1}{ H * FT{objeto} }
+    O = np.fft.fft2(objeto)
+    E_img = np.fft.ifft2(O * H)
 
-    # 7.5 Propagación Objeto → Plano de Fourier
-    print("Propagando Objeto -> Plano de Fourier (Punto 3)...")
-    campo_fourier, Lx_F, Ly_F = propagar_Fresnel_ABCD(
-        objeto=objeto,
-        sistema=sistema_anterior,
-        Lx_out=Lx_fourier,
-        Ly_out=Ly_fourier,
-        lambda_0=CONFIG["lambda_0"]
-    )
-    print("Propagación 1/2 completa.\n")
-
-    # 7.6 Aplicación de la pupila (NA) en el plano de Fourier
-    xxF, yyF = malla_cartesiana(nx, Lx_F, ny, Ly_F)
-
-    # Pupila circular del objetivo (NA = 0.5)
-    diafragma = mascara_circular(xxF, yyF, CONFIG["diam_apertura"] / 2)
-
-    # Filtro adicional (aquí: "ninguno" → todo pasa)
-    filtro = filtro_plano_fourier(xxF, yyF, CONFIG)
-
-    # Filtro total en el plano de Fourier
-    H = diafragma * filtro
-    campo_fourier_filtrado = campo_fourier * H
-
-    # 7.7 Propagación Plano de Fourier → Sensor
-    print("Propagando Plano de Fourier -> Sensor (Punto 2)...")
-    campo_sensor, Lx_out, Ly_out = propagar_Fresnel_ABCD(
-        objeto=campo_fourier_filtrado,
-        sistema=sistema_posterior,
-        Lx_out=Lx_sensor,
-        Ly_out=Ly_sensor,
-        lambda_0=CONFIG["lambda_0"]
-    )
-    print("Propagación 2/2 completa.\n")
-
-    # 7.8 Visualización de los diferentes planos
+    # 7.7 Visualización
     mostrar_intensidad(
-        objeto, Lx_F, Ly_F,
-        "Objeto de entrada (Test USAF 1951)",
+        objeto, Lx_obj, Ly_obj,
+        "Objeto de entrada (Test USAF 1951, plano objeto)",
         *CONFIG["clim"]["objeto"]
     )
 
-    mostrar_intensidad(
-        campo_fourier, Lx_F, Ly_F,
-        "Campo antes de la pupila (plano de Fourier)",
-        *CONFIG["clim"]["antes_diafragma"]
-    )
+    # Para mostrar H como mapa, usamos ejes en frecuencia (ciclos/mm)
+    H_amp = np.abs(H)
+    fx_mm = fx / 1e3  # ciclos/mm
+    fy_mm = fy / 1e3
+    FX_mm, FY_mm = np.meshgrid(fx_mm, fy_mm)
+    extent_f = (fx_mm.min(), fx_mm.max(), fy_mm.min(), fy_mm.max())
+
+    plt.imshow(H_amp, extent=extent_f, origin='lower', cmap='gray')
+    plt.colorbar(label="|H(fx,fy)|")
+    plt.xlabel("f_x (ciclos/mm)")
+    plt.ylabel("f_y (ciclos/mm)")
+    plt.title(f"Función de transferencia coherente\nCorte: f_c = {F_C_COHERENTE/1e3:.2f} líneas/mm")
+    plt.show()
+
+    # En el plano imagen, el campo tiene el mismo tamaño de matriz,
+    # pero físicamente las coordenadas están ampliadas por M_OBJ.
+    Lx_img = Lx_obj * M_OBJ
+    Ly_img = Ly_obj * M_OBJ
 
     mostrar_intensidad(
-        H, Lx_F, Ly_F,
-        f"Pupila del objetivo (NA = 0.5, D = {DIAM_PUPILA*1e3:.2f} mm)",
-        *CONFIG["clim"]["filtro"]
-    )
-
-    mostrar_intensidad(
-        campo_fourier_filtrado, Lx_F, Ly_F,
-        "Campo tras la pupila",
-        *CONFIG["clim"]["tras_diafragma"]
-    )
-
-    mostrar_intensidad(
-        campo_sensor, Lx_out, Ly_out,
-        f"Imagen en el sensor (Punto 2)\nLímite de Abbe teórico: {D_ABBE*1e6:.3f} μm",
+        E_img, Lx_img, Ly_img,
+        f"Imagen en el plano imagen (Punto 2)\nLímite de Abbe teórico: {D_ABBE*1e6:.3f} μm",
         *CONFIG["clim"]["sensor"]
     )
 
@@ -413,5 +351,4 @@ def main():
 # ==============================================================
 
 if __name__ == "__main__":
-    # Llamada principal para el Punto 3 de la Práctica 3.
     main()

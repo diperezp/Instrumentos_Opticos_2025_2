@@ -1,8 +1,8 @@
 # ==============================================================
-# punto3_microscopio_ABCD.py
+# punto2_microscopio_ABCD.py
 #
 # Práctica 3 – Microscopía Óptica
-# Punto 3: Simulación difractiva de un microscopio compuesto
+# Punto 2: Simulación difractiva de un microscopio compuesto
 #          usando formalismo ABCD + Fresnel
 #
 # - Modelo coherente de un microscopio 20x/0.5 con lente de tubo de 200 mm
@@ -11,7 +11,7 @@
 # - Pupila circular que emula la NA del objetivo (NA = 0.5)
 # - Cálculo del límite de Abbe y visualización de la imagen simulada
 #
-# *** CÓDIGO ESPECÍFICO DEL PUNTO 3 DE LA PRÁCTICA 3 ***
+# *** CÓDIGO ESPECÍFICO DEL PUNTO 2 DE LA PRÁCTICA 3 ***
 # ==============================================================
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from tkinter import filedialog
 import matplotlib.pyplot as plt
 
 # ==============================================================
-# 1. PARÁMETROS FÍSICOS DEL MICROSCOPIO (Punto 3, Práctica 3)
+# 1. PARÁMETROS FÍSICOS DEL MICROSCOPIO (Punto 2, Práctica 3)
 # ==============================================================
 
 # Longitud de onda (λ) de la iluminación coherente
@@ -47,7 +47,7 @@ DIAM_PUPILA = 2.0 * F_MO * NA_OBJ   # D_pupila = 2 f_MO NA
 F_C_COHERENTE = NA_OBJ / LAMBDA_0   # frecuencia de corte [ciclos/m]
 D_ABBE = 1.0 / F_C_COHERENTE        # resolución mínima [m]
 
-print("--- PARÁMETROS DE SIMULACIÓN (Punto 3 – Práctica 3) ---")
+print("--- PARÁMETROS DE SIMULACIÓN (Punto 2 – Práctica 3) ---")
 print(f"Lambda: {LAMBDA_0*1e9:.1f} nm")
 print(f"Focal Objetivo (f_MO): {F_MO*1e3:.2f} mm")
 print(f"Focal Lente Tubo (f_TL): {F_TL*1e3:.2f} mm")
@@ -57,7 +57,7 @@ print(f"Frecuencia máxima (f_c): {F_C_COHERENTE/1e3:.2f} líneas/mm")
 print(f"Resolución de Abbe (d_Abbe): {D_ABBE*1e6:.3f} μm")
 print("--------------------------------------------------\n")
 
-# Configuración general usada en la simulación del Punto 3
+# Configuración general usada en la simulación del Punto 2
 CONFIG = {
     # Longitud de onda
     "lambda_0": LAMBDA_0,
@@ -169,7 +169,7 @@ def mostrar_intensidad(campo: np.ndarray, Lx: float, Ly: float, titulo: str,
     plt.show()
 
 # ==============================================================
-# 3. MUESTREO DE FRESNEL (ABCD) – Punto 3
+# 3. MUESTREO DE FRESNEL (ABCD) – Punto 2
 # ==============================================================
 
 def muestreo_entrada_para_Fresnel(Nx: int, Lx_out: float, B: float, lambda_0: float,
@@ -237,7 +237,7 @@ def filtro_plano_fourier(xx: np.ndarray, yy: np.ndarray, cfg: dict) -> np.ndarra
     raise ValueError("tipo_filtro no reconocido.")
 
 # ==============================================================
-# 5. FORMALISMO ABCD (Matrices del sistema) – Punto 3
+# 5. FORMALISMO ABCD (Matrices del sistema) – Punto 2
 # ==============================================================
 
 @dataclass
@@ -277,7 +277,7 @@ def encadenar_elementos(elementos: list[np.ndarray]) -> SistemaABCD:
     return SistemaABCD(M=Msys, B_total=B_total, camino_optico=B_total)
 
 # ==============================================================
-# 6. PROPAGACIÓN DE FRESNEL USANDO ABCD – Punto 3
+# 6. PROPAGACIÓN DE FRESNEL USANDO ABCD – Punto 2
 # ==============================================================
 
 def propagar_Fresnel_ABCD(objeto: np.ndarray, sistema: SistemaABCD,
@@ -315,7 +315,7 @@ def propagar_Fresnel_ABCD(objeto: np.ndarray, sistema: SistemaABCD,
     return campo_out, Lx_out, Ly_out
 
 # ==============================================================
-# 7. RUTINA PRINCIPAL (Punto 3 – Formación de imagen USAF)
+# 7. RUTINA PRINCIPAL (Punto 2 – Formación de imagen USAF)
 # ==============================================================
 
 def main():
@@ -367,7 +367,7 @@ def main():
     campo_fourier_filtrado = campo_fourier * H
 
     # 7.7 Propagación Plano de Fourier → Sensor
-    print("Propagando Plano de Fourier -> Sensor (Punto 3)...")
+    print("Propagando Plano de Fourier -> Sensor (Punto 2)...")
     campo_sensor, Lx_out, Ly_out = propagar_Fresnel_ABCD(
         objeto=campo_fourier_filtrado,
         sistema=sistema_posterior,
@@ -404,12 +404,12 @@ def main():
 
     mostrar_intensidad(
         campo_sensor, Lx_out, Ly_out,
-        f"Imagen en el sensor (Punto 3)\nLímite de Abbe teórico: {D_ABBE*1e6:.3f} μm",
+        f"Imagen en el sensor (Punto 2)\nLímite de Abbe teórico: {D_ABBE*1e6:.3f} μm",
         *CONFIG["clim"]["sensor"]
     )
 
 # ==============================================================
-# 8. EJECUCIÓN DEL PUNTO 3
+# 8. EJECUCIÓN DEL PUNTO 2
 # ==============================================================
 
 if __name__ == "__main__":

@@ -163,6 +163,24 @@ def mostrar_intensidad(campo: np.ndarray, Lx: float, Ly: float, titulo: str,
     plt.title(titulo)
     plt.show()
 
+def generar_patron_sinusoidal(nx: int, ny: int,
+                              dx_obj: float, dy_obj: float,
+                              f_test: float) -> np.ndarray:
+    """
+    Genera un patrón sinusoidal 1D en el plano objeto, variando en x
+    con frecuencia espacial f_test (ciclos/m).
+    Se usa para probar el comportamiento del sistema por encima de f_c.
+    (Punto 2 – Práctica 3)
+    """
+    x = (np.arange(nx) - nx/2) * dx_obj
+    y = (np.arange(ny) - ny/2) * dy_obj
+    X, Y = np.meshgrid(x, y)
+
+    # Patrón sinusoidal (amplitud entre 0 y 1)
+    patron = 0.5 + 0.5 * np.sin(2 * np.pi * f_test * X)
+    return patron
+
+
 # ==============================================================
 # 3–6. UTILIDADES ABCD / FRESNEL
 # (Se mantienen, pero ya no se usan en main)
@@ -345,6 +363,40 @@ def main():
         f"Imagen en el plano imagen (Punto 2)\nLímite de Abbe teórico: {D_ABBE*1e6:.3f} μm",
         *CONFIG["clim"]["sensor"]
     )
+
+        # --------------------------------------------------------------
+    # 7.8 Prueba sintética: patrón sinusoidal por encima de f_c
+    #     (Punto 2 – Práctica 3)
+    # --------------------------------------------------------------
+    # Elegimos una frecuencia de prueba mayor que el límite de Abbe:
+    factor_sobre_fc = 1.2  # 20% por encima de f_c
+    f_test = factor_sobre_fc * f_c  # [ciclos/m]
+
+    print("\n--- Prueba sintética (patrón sinusoidal) ---")
+    print(f"f_c (teórico)      = {f_c/1e3:.2f} líneas/mm")
+    print(f"f_test (>{' ' if factor_sobre_fc>=1 else ''}f_c) = {f_test/1e3:.2f} líneas/mm\n")
+
+    # Patrón en el plano objeto (resolución espacial 'ideal')
+    patron_sup = generar_patron_sinusoidal(nx, ny, dx_obj, dy_obj, f_test)
+
+    mostrar_intensidad(
+        patron_sup, Lx_obj, Ly_obj,
+        f"Patrón sinusoidal en el objeto\n"
+        f"f_test = {f_test/1e3:.2f} líneas/mm (> f_c)",
+        *CONFIG["clim"]["objeto"]
+    )
+
+    # Formación de imagen a través del microscopio (mismo H)
+    O_sup = np.fft.fft2(patron_sup)
+    E_img_sup = np.fft.ifft2(O_sup * H)
+
+    mostrar_intensidad(
+        E_img_sup, Lx_img, Ly_img,
+        "Imagen del patrón sinusoidal filtrada por la CTF\n"
+        "(f_test > f_c: se espera pérdida casi total de modulación)",
+        *CONFIG["clim"]["sensor"]
+    )
+
 
 # ==============================================================
 # 8. EJECUCIÓN DEL PUNTO 2

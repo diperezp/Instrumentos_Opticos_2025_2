@@ -1,6 +1,8 @@
 import numpy as np
+from numpy import *
 import matplotlib.pyplot as plt
 from LightPipes import *
+from utilopctic import *
 
 path_image=r"C:\Users\luzad\OneDrive\Documentos\GitHub\Instrumentos_Opticos_2025_2\Entrega03\recursos\MuestrasBio\MuestraBio_E02.csv"
 
@@ -23,7 +25,8 @@ def import_image_complex(path):
     return data_complex
 
 img=import_image_complex(path_image)
-
+#img=import_image()[:,:,0]
+print(img.shape)
 
 #inciamos definiendo la dimensiones de la imagen
 
@@ -31,6 +34,10 @@ img=import_image_complex(path_image)
 img_width=390*um
 N=img.shape[0]
 pixel_size=img_width/N
+#imagen
+amplitud=np.abs(img)
+amplitud=amplitud/amplitud.max()
+angle=np.angle(img)
 #caracteristicas de la iluminacion
 wave_lenght=533*nm
 
@@ -38,32 +45,28 @@ wave_lenght=533*nm
 f_MO=10*mm
 f_TL=200*mm
 
-#iniciamos la simulacion del microscopio
 
-U=Begin(pixel_size,wave_lenght,N)
+#transformada de fourier
+espectro=np.fft.fftshift(np.fft.fft2(img))
 
-U=MultIntensity(U,np.abs(img))
-U=MultPhase(U,np.angle(img))
+I=np.abs(espectro)
+P=np.angle(espectro)
 
-U=Fresnel(U,f_MO)
-U=Lens(U,f_MO)
-U=Fresnel(U,f_MO)
-U=Fresnel(U,f_TL)
-U=Lens(U,f_TL)
-U=Fresnel(U,f_TL)
+img1=angle*np.exp(1j*amplitud)
 
-
-I=Intensity(U)
-
+export_image(amplitud)
+export_image(angle)
 
 
 
 
 fig=plt.figure(figsize=(10,12))
-axis1=fig.add_subplot(1,3,1)
-axis1.imshow(np.abs(img),cmap='gray')
-axis2=fig.add_subplot(1,3,2)
-axis2.imshow(np.angle(img))
-axis3=fig.add_subplot(1,3,3)
-axis3.imshow(I)
+axis1=fig.add_subplot(1,4,1)
+axis1.imshow(amplitud,cmap='gray')
+axis2=fig.add_subplot(1,4,2)
+axis2.imshow(angle,cmap='gray')
+axis3=fig.add_subplot(1,4,3)
+axis3.imshow(np.abs(img1),cmap='gray')
+axis4=fig.add_subplot(1,4,4)
+axis4.imshow(np.angle(img1),cmap='gray')
 plt.show()

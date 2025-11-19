@@ -22,6 +22,7 @@ import cv2
 import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
+from filterZernike import filter_Zernike
 
 # ==============================================================
 # 1. PARÁMETROS FÍSICOS DEL MICROSCOPIO (Punto 3, Práctica 3)
@@ -47,6 +48,9 @@ DIAM_PUPILA = 2.0 * F_MO * NA_OBJ   # D_pupila = 2 f_MO NA
 F_C_COHERENTE = NA_OBJ / LAMBDA_0   # frecuencia de corte [ciclos/m]
 D_ABBE = 1.0 / F_C_COHERENTE        # resolución mínima [m]
 
+# Diametro del filtro de Zernike de fase constante phi=pi/2
+DIAM_FILTRO_ZERNIKE= 0.01*DIAM_PUPILA #1.22*LAMBDA_0*F_MO/ (DIAM_PUPILA)
+
 print("--- PARÁMETROS DE SIMULACIÓN (Punto 3 – Práctica 3) ---")
 print(f"Lambda: {LAMBDA_0*1e9:.1f} nm")
 print(f"Focal Objetivo (f_MO): {F_MO*1e3:.2f} mm")
@@ -55,7 +59,9 @@ print(f"Diámetro Pupila (2·f_MO·NA): {DIAM_PUPILA*1e3:.2f} mm")
 print("--- LÍMITE TEÓRICO (ABBE, coherente) ---")
 print(f"Frecuencia máxima (f_c): {F_C_COHERENTE/1e3:.2f} líneas/mm")
 print(f"Resolución de Abbe (d_Abbe): {D_ABBE*1e6:.3f} μm")
+print(f"Diámetro filtro Zernike: {DIAM_FILTRO_ZERNIKE:.3f} μm")
 print("--------------------------------------------------\n")
+
 
 # Configuración general usada en la simulación del Punto 3
 CONFIG = {
@@ -75,16 +81,12 @@ CONFIG = {
     # Tipo de filtro en el plano de Fourier
     # Para el Punto 3, solo se aplica la pupila circular (NA),
     # por eso el filtro adicional es "ninguno".
-    "tipo_filtro": "ninguno",
+    "tipo_filtro": "Zernike",
 
-    #diametro de de la rendija 
-    "radio_pasa_centro":DIAM_PUPILA,
-
-    #ancho rendija
-    "ancho_rendija":DIAM_PUPILA,
+    "diametro_filtro_zernike": DIAM_FILTRO_ZERNIKE,
 
     # Diámetro físico de la pupila (controlado por la NA del objetivo)
-    "diam_apertura": DIAM_PUPILA/10,
+    "diam_apertura": DIAM_PUPILA,
 
     # Rango de intensidades (fracción del máximo) para las gráficas
     "clim": {
@@ -107,7 +109,7 @@ def seleccionar_imagen_en_grises(inicio_en_escritorio: bool = True) -> np.ndarra
     Abre un diálogo para seleccionar la imagen del test de resolución (USAF 1951).
     Devuelve una matriz en escala de grises normalizada a [0,1].
     """
-    print("Por favor, selecciona una imagen del Test de Resolución USAF 1951.")
+    print("Por favor, selecciona una imagen relacionada a la transmitancia en escala de grises.")
     root = tk.Tk()
     root.withdraw()
 
@@ -215,6 +217,10 @@ def filtro_plano_fourier(xx: np.ndarray, yy: np.ndarray, cfg: dict) -> np.ndarra
     if tipo == "ninguno":
         # Filtro de paso total; la limitación está dada solo por el diafragma circular.
         return 1.0
+    
+    if tipo == "Zernike":
+        radio_filtro = cfg.get("diametro_filtro_zernike", 1e-3) / 2
+        return filter_Zernike(xx, yy, cfg["diam_apertura"]/2, radio_filtro, np.pi/2,0.5)
 
     if tipo == "circular":
         radio = cfg.get("radio_pasa_centro", 1e-3)
@@ -373,6 +379,15 @@ def main():
     # Filtro adicional (aquí: "ninguno" → todo pasa)
     filtro = filtro_plano_fourier(xxF, yyF, CONFIG)
 
+    fig = plt.figure(figsize=(10, 12))
+    plt.imshow(np.abs(filtro), extent=(-Lx_F/2*1e3, Lx_F/2*1e3, -Ly_F/2*1e3, Ly_F/2*1e3),
+               origin='lower', cmap='gray')
+    plt.colorbar(label="Amplitud del filtro")
+    plt.xlabel("x (mm)")
+    plt.ylabel("y (mm)")
+    plt.title("Filtro aplicado en el plano de Fourier")
+    plt.show()
+
     # Filtro total en el plano de Fourier
     H = diafragma * filtro
     campo_fourier_filtrado = campo_fourier * H
@@ -391,7 +406,7 @@ def main():
     # 7.8 Visualización de los diferentes planos
     mostrar_intensidad(
         objeto, Lx_F, Ly_F,
-        "Objeto de entrada (Test USAF 1951)",
+        "Muestra Biologica",
         *CONFIG["clim"]["objeto"]
     )
 
@@ -415,7 +430,7 @@ def main():
 
     mostrar_intensidad(
         campo_sensor, Lx_out, Ly_out,
-        f"Imagen en el sensor (Punto 3)\nLímite de Abbe teórico: {D_ABBE*1e6:.3f} μm",
+        f"Imagen de contraste de fase (Punto 3 – Práctica 3)",
         *CONFIG["clim"]["sensor"]
     )
 def main_3():

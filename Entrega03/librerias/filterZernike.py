@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from microContraste import  mascara_circular
+
+
+def mascara_circular(xx: np.ndarray, yy: np.ndarray, radio: float) -> np.ndarray:
+    """Máscara binaria circular centrada (1 dentro del disco, 0 fuera)."""
+    return ((xx**2 + yy**2) <= radio**2).astype(float)
 
 #características de iluminacion
 wavelength = 533e-9  # Longitud de onda en metros
@@ -21,8 +25,13 @@ x = np.linspace(-size_x/2, size_x/2, N_x)
 y = np.linspace(-size_y/2, size_y/2, N_y)
 X, Y = np.meshgrid(x, y)
 #tamaño del radio de la máscara circular
-R_pupila = 98e-6  # Radio en metros
+R_pupila = 10e-3  # Radio en metros
 R_filter = 1.22*wavelength*f_MO/R_pupila
+
+print(f"Radio pupila: {R_pupila*1e3} mm")
+print(f"Radio filtro Zernike: {R_filter*1e9} nm")
+
+
 
 
 
@@ -45,6 +54,8 @@ img = Pupila + Filter
 Intensidad=np.abs(img)
 
 Phase=np.angle(img)
+
+
 
 def filter_Zernike(X, Y, R_pupila, R_filter, coef,Beta):
     # Creamos la pupila

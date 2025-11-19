@@ -6,7 +6,7 @@
 #          usando formalismo ABCD + Fresnel
 #
 # - Modelo coherente de un microscopio 20x/0.5 con lente de tubo de 200 mm
-# - Objeto: imagen del test de resolución USAF 1951 (cargada por el usuario)
+# - Objeto: Generacion de contraste utilizando Filtro de Zernike
 # - Sistema equivalente 4f (objetivo + lente de tubo)
 # - Pupila circular que emula la NA del objetivo (NA = 0.5)
 # - Cálculo del límite de Abbe y visualización de la imagen simulada

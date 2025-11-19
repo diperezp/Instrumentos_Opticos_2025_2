@@ -78,6 +78,11 @@ CONFIG = {
     "px_rows": 2048,
     "pitch": 3.45e-6,     # [m] tamaño de píxel
 
+    #dimensiones fisicas del objeto
+    "size_x_objeto": 4.5e-7, #m
+    "size_y_objeto": 3.8e-7, #m
+    
+
     # Tipo de filtro en el plano de Fourier
     # Para el Punto 3, solo se aplica la pupila circular (NA),
     # por eso el filtro adicional es "ninguno".
@@ -192,6 +197,11 @@ def muestreo_entrada_para_Fresnel(Nx: int, Lx_out: float, B: float, lambda_0: fl
     dy_in = (lambda_0 * B) / (Ny * dy_out)
     Lx_in, Ly_in = dx_in * Nx, dy_in * Ny
     return dx_in, dy_in, Lx_in, Ly_in
+def malla_de_entrada(Nx: int, Lx_in: float, Ny: int, Ly_in: float) -> tuple[np.ndarray, np.ndarray]:
+    """Crea la malla cartesiana en el plano de ENTRADA."""
+    x = np.linspace(-Lx_in/2, Lx_in/2, Nx)
+    y = np.linspace(-Ly_in/2, Ly_in/2, Ny)
+    return np.meshgrid(x, y)
 
 # ==============================================================
 # 4. FILTROS EN EL PLANO DE FOURIER (Pupila del objetivo)
@@ -376,7 +386,7 @@ def main():
     # Pupila circular del objetivo (NA = 0.5)
     diafragma = mascara_circular(xxF, yyF, CONFIG["diam_apertura"] / 2)
 
-    # Filtro adicional (aquí: "ninguno" → todo pasa)
+    # Filtro adicional (aquí: "filtroZernike")
     filtro = filtro_plano_fourier(xxF, yyF, CONFIG)
 
     fig = plt.figure(figsize=(10, 12))
@@ -418,13 +428,13 @@ def main():
 
     mostrar_intensidad(
         H, Lx_F, Ly_F,
-        f"Pupila del objetivo (NA = 0.5, D = {DIAM_PUPILA*1e3:.2f} mm)",
+        f"Pupila del objetivo (NA = 0.5, D = {DIAM_PUPILA*1e3:.2f} mm r_0 = {CONFIG['diametro_filtro_zernike']/2*1e6:.2f} um)",
         *CONFIG["clim"]["filtro"]
     )
 
     mostrar_intensidad(
         campo_fourier_filtrado, Lx_F, Ly_F,
-        "Campo tras la pupila",
+        f"Campo tras la pupila (plano de Fourier) ",
         *CONFIG["clim"]["tras_diafragma"]
     )
 

@@ -8,7 +8,8 @@
 # U_img(x,y) = FT^{-1}{ H(fx,fy) * FT{U_obj(x,y)} }
 # con H(fx,fy) = pupila circular de radio f_c = NA / λ
 #
-# - Objeto: imagen del test de resolución USAF 1951 (cargada por el usuario)
+# - Objeto: imagen del test de resolución USAF
+#  1951 (cargada por el usuario)
 # - Se usa el tamaño de píxel del sensor y el aumento para definir el muestreo
 #   en el plano objeto.
 # - Se calcula el límite de Abbe y se visualiza la imagen simulada.

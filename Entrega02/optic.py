@@ -136,6 +136,14 @@ class ProcesamientoOptico():
         image=np.abs(self.__transmitance)
         X,Y=mesh_image(image,self.__pixel_size,self.__pixel_size)
         plot_image(image,X,Y)
+    def limit_simulated(self):
+        """Esta funcion devuelve el valor del limite de simulacion para las condiciones
+        fisicas dadas y la condiciones de simulacion
+        """
+        #calculamos el valor del z_limite
+        N=self.__field_propagated.shape[0]
+        z_limite=(N*(self.__pixel_size**2))/self.__length_wave
+        return z_limite
 
     def propagate(self, z=0,mode='fresnel'):
         """
@@ -155,7 +163,6 @@ class ProcesamientoOptico():
         
         #creamos la malla de coordenadas centrada
         N_x = self.__transmitance.shape[0]
-        N_y = self.__transmitance.shape[1]
         X,Y=mesh_image(self.__transmitance,self.__pixel_size,self.__pixel_size)
 
         # valores necesarios para la propagación de Fresnel
@@ -166,21 +173,18 @@ class ProcesamientoOptico():
         u1 = u0 * np.exp(1j * (k / (2 * z)) * (X**2 + Y**2))
         # Transformada de Fourier del campo con fase esférica
         U2 = fftshift(fft2(fftshift(u1))) * (dx**2)
-
         #calculamos el tamaño del pixel en el plano de fresnel
         pixel_size_fresnel = self.__length_wave * z / (N_x * self.__pixel_size)
-        
         #creamos la malla en el plano de fresnel
-        X_f,Y_f=mesh_image(U2,pixel_size_fresnel,pixel_size_fresnel)
-        
+        X_f,Y_f=mesh_image(U2,pixel_size_fresnel/2,pixel_size_fresnel/2)
         # Aplicar el factor de transferencia de Fresnel
         H = np.exp(1j * (k / (2 * z)) * (X_f**2 + Y_f**2))
         U3 = H * U2
-
         #actualizamos los valores de las dimensiones de los pixeles
         self.__pixel_size=pixel_size_fresnel
-        
         self.__field_propagated = U3
+        #luego aplicamos padding sobre la imagen
+        self.__field_propagated=resize_with_pad_complex(self.__field_propagated)
     def lens(self, focal_length):
         """
         Simula el paso del campo óptico por una lente delgada con distancia focal dada.
@@ -199,6 +203,10 @@ class ProcesamientoOptico():
 
         # Aplicar la fase de la lente delgada
         lens_phase = np.exp(-1j * (k / (2*focal_length)) * (X**2 + Y**2))
+        print("1*****************")
+        fig=plt.figure(figsize=(10,12))
+        plt.imshow(np.angle(lens_phase))
+        plt.show()
         self.__field_propagated *= lens_phase
     
     def show_propagated_field(self):
@@ -214,6 +222,7 @@ class ProcesamientoOptico():
         x_um = x * 1e3  # Convertir a mm
         y_um = y * 1e3  # Convertir a mm
 
+
         plt.figure(figsize=(8, 6))
         plt.imshow(np.abs(self.__field_propagated), cmap='inferno', extent=[x_um[0], x_um[-1], y_um[0], y_um[-1]])
         plt.title('Campo Óptico Propagado |u|')
@@ -222,6 +231,8 @@ class ProcesamientoOptico():
         plt.colorbar(label='Amplitud')
         plt.tight_layout()
         plt.show()
+
+
 
         
 

@@ -39,14 +39,11 @@ lens_radius= 100*mm/2
 F = CircAperture(F, lens_radius)  # apertura de la lente (borde físico)
 F = Lens(F, f)               # fase de lente delgada 
 F= Forvard(F, f)         # propaga distancia extra si es necesario
-F= Forvard(F, f)            # propaga hasta el plano de la lente
-lens_radius=100*mm/2
-F = CircAperture(F, lens_radius)  # apertura de la lente (borde físico)
-F=Lens(F, f)              # otra lente si es necesario
-F= Forvard(F, f)          # propaga distancia extra si es necesario
+
 
 # ---------------- Intensidad y ejes físicos en el sensor ----------------
-I = Intensity(F, flag=1)     # intensidad normalizada
+I = Intensity(F, flag=0)     # intensidad normalizada
+I=np.log(I)
 
 # Escala espacial en el plano sensor (Fourier de la lente):
 dx_sensor = wavelength * f / size     # tamaño de pixel en el sensor (m)
@@ -58,7 +55,7 @@ y = (np.arange(N) - N//2) * dx_sensor # eje y (m)
 extent_mm = [x[0]*1e3, x[-1]*1e3, y[0]*1e3, y[-1]*1e3]  # mm
 
 plt.figure(figsize=(6,5))
-plt.imshow(I, origin='lower', extent=extent_mm, cmap='inferno')
+plt.imshow(I, origin='lower', extent=extent_mm, cmap='gray')
 plt.xlabel('x (mm)'); plt.ylabel('y (mm)')
 plt.title('Plano sensor (f): |FT{transmitancia}|^2')
 plt.colorbar(label='Intensidad (norm.)')

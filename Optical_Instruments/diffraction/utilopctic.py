@@ -2,7 +2,6 @@ import numpy as np
 from tkinter import Tk, filedialog
 from PIL import Image
 import matplotlib.pyplot as plt
-from utilopctic import *
 import cv2
 from LightPipes import *
 
@@ -51,12 +50,17 @@ def import_image():
         title="Seleccionar imagen",
         filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")]
     )
+    print(ruta_imagen)
 
     # Cargar la imagen como un arreglo numpy
     if ruta_imagen:
         #cargamos el primer 
         imagen = Image.open(ruta_imagen)
-        return np.array(imagen)
+        imagen = np.array(imagen)
+        if(len(imagen.shape)>=3):
+            #convertimos a escala de grises
+            imagen = imagen[:,:,0]
+        return imagen
     else:
         return None
 

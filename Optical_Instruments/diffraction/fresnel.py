@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from diffraction.utilopctic import import_image
 import cv2
 from PIL import Image
+from diffraction.utilopctic import export_image
+from diffraction.filterZernike import filter_Zernike
 
 
 
@@ -34,12 +36,16 @@ class Field():
                 #cargamos el primer 
                 imagen = Image.open(path)
                 imagen = np.array(imagen)
+                if (len(imagen.shape) >= 3):
+                    imagen = imagen[:, :, 0]  # Usar solo el canal rojo si es RGB
             else:
                 return None
         #redimensionamos la imagen al tamaño del campo sin utilizar cv2
         A_resized = cv2.resize(imagen, (self._N, self._N), interpolation=cv2.INTER_CUBIC)
         #cambio a float32
         A_resized = A_resized.astype(np.float32)
+        #normalizamos la intensidad entre 0 y 1
+        A_resized = A_resized / A_resized.max()
         self.__E = A_resized * np.exp(1j * 0)
 
     def import_Phase(self,path:None):
@@ -53,27 +59,27 @@ class Field():
                 #cargamos el primer 
                 imagen = Image.open(path)
                 imagen = np.array(imagen)
+                if (len(imagen.shape) >= 3):
+                    imagen = imagen[:, :, 0]  # Usar solo el canal rojo si es RGB
             else:
                 return None
         
         #redimensionamos la imagen al tamaño del campo sin utilizar cv2
         imagen_resized = cv2.resize(imagen, (self._N, self._N), interpolation=cv2.INTER_CUBIC)
         #normalizamoos la fase entre 0 y 2pi
-        imagen_resized = (imagen_resized/255)* 2 * np.pi
+        imagen_resized = (imagen_resized/imagen_resized.max())* 2 * np.pi
         self.__E=self.__E*np.exp(1j * imagen_resized)
-
-    def padding2N_field(self):
+    def padding2N_field(self,factor=2):
         """
         Agrega padding al campo eléctrico para alcanzar un nuevo tamaño físico.
         
         Parámetros:
             new_size : nuevo tamaño físico (en metros)
         """
-        new_size = 2 * self._grid_size
+        new_size = factor * self._grid_size
         N_new = int(new_size / self._dx)
         pad_x = (N_new - self._N) // 2
         pad_y = (N_new - self._N) // 2
-        
         E_padded = np.pad(self.__E, ((pad_x, pad_x), (pad_y, pad_y)), mode='constant', constant_values=0)
         
         self.__E = E_padded
@@ -89,6 +95,10 @@ class Field():
         Retorna:
             distancia mínima de propagación (en metros)
         """
+        # print("Calculando límite de Fresnel...")
+        # print("Grid size (m):", self._grid_size)
+        # print("Wavelength (m):", self._wavelenght)
+        # print("N:", self._N)
         dx = self._dx
         wavelength = self._wavelenght
         N = self._N
@@ -103,8 +113,7 @@ class Field():
         :param self: Description
         :param z: Description
         """
-        #aplicamos padding en la imagen
-        self.padding2N_field()
+
 
         k = self._k
         dx = self._dx
@@ -127,11 +136,7 @@ class Field():
         # Transformada inversa de Fourier para obtener el campo propagado
         E_propagated = np.fft.ifft2(E_fft_propagated)
 
-        
         self.__E = E_propagated
-
-        #aplicamos crop para volver al tamaño original
-        self.crop_field()
 
     
     def crop_field(self):
@@ -175,7 +180,8 @@ class Field():
         aperture = np.where(R <= radius, 1, 0)
         
         self.__E = self.__E * aperture
-    def zernike_filterself( b, phase):
+
+    def zernike_filter(self,radius_pupil,radius_filter,b, phase):
         """
         Aplica un filtro de Zernike al campo eléctrico.
         
@@ -183,7 +189,19 @@ class Field():
             n : orden radial
             m : orden azimutal
         """
+        filter = filter_Zernike(self._X, self._Y, radius_pupil, radius_filter, phase, b)
+        self.__E = self.__E * filter
         pass
+
+    def export_field(self):
+        """
+        Exporta el campo eléctrico como una matriz numpy.
+        
+        Retorna:
+            matriz numpy del campo eléctrico
+        """
+        export_image(self.__E)
+        return self.__E
     
 
     def show_intensity(self):

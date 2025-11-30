@@ -25,11 +25,16 @@ class Field():
         self._wavelength = wavelength
         self._N = N
         return Field(grid_size, wavelength, N)
-    def import_Intensity(self,path:None):
+    def get_field(self):
+        """
+        Funcion que devuelve el campo de la simulacion
+        """
+        return self.__E 
+    def import_Intensity(self,path=None,Title="Seleccionar imagen"):
 
         if path is None:
             #llamamos a la funcion de importar imagen
-            imagen = import_image()
+            imagen = import_image(Title)
         else:
             # Cargar la imagen como un arreglo numpy
             if path:
@@ -48,11 +53,11 @@ class Field():
         A_resized = A_resized / A_resized.max()
         self.__E = A_resized * np.exp(1j * 0)
 
-    def import_Phase(self,path:None):
+    def import_Phase(self,path:None,Title="Seleccionar imagen"):
 
         if path is None:
             #llamamos a la funcion de importar imagen
-            imagen = import_image()
+            imagen = import_image(Title)
         else:
             # Cargar la imagen como un arreglo numpy
             if path:
@@ -204,23 +209,13 @@ class Field():
         return self.__E
     
 
-    def show_intensity(self):
+    def show_intensity(self,axes):
         intensity= np.abs(self.__E)**2
-        plt.imshow(intensity, cmap='gray', extent=(-self._grid_size/2*1e3, self._grid_size/2*1e3, -self._grid_size/2*1e3, self._grid_size/2*1e3))
-        plt.colorbar(label='Intensity')
-        plt.xlabel('X (mm)')
-        plt.ylabel('Y (mm)')
-        plt.title('Intensity of Field')
-        plt.show()
+        axes.imshow(intensity, cmap='gray', extent=(-self._grid_size/2*1e3, self._grid_size/2*1e3, -self._grid_size/2*1e3, self._grid_size/2*1e3))
         
-    def show_phase(self):
+    def show_phase(self,axes):
         phase = np.angle(self.__E)
-        plt.imshow(phase, cmap='gray', extent=(-self._grid_size/2*1e3, self._grid_size/2*1e3, -self._grid_size/2*1e3, self._grid_size/2*1e3))
-        plt.colorbar(label='Phase (radians)')
-        plt.xlabel('X (mm)')
-        plt.ylabel('Y (mm)')
-        plt.title('Phase of Field')
-        plt.show()
+        axes.imshow(phase, cmap='gray', extent=(-self._grid_size/2*1e3, self._grid_size/2*1e3, -self._grid_size/2*1e3, self._grid_size/2*1e3))
     
 
         

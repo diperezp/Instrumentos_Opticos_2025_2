@@ -38,7 +38,7 @@ def rescale_field(F, new_size, wavelength):
     return F_new
 
 
-def import_image():
+def import_image(Title="Seleccionar Imagen"):
     """
     Esta funcion abre una pantalla emergente del administrador de archivos para la ruta de una imagen a importar.
     """
@@ -47,7 +47,7 @@ def import_image():
 
     # Abrir el cuadro de diálogo para seleccionar la imagen
     ruta_imagen = filedialog.askopenfilename(
-        title="Seleccionar imagen",
+        title=Title,
         filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")]
     )
     print(ruta_imagen)

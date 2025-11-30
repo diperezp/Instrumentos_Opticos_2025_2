@@ -74,22 +74,22 @@ def filter_Zernike(X, Y, R_pupila, R_filter, coef,Beta):
     
     return img
 
-Filter = filter_Zernike(X, Y, R_pupila, R_filter, np.pi/2,0.5)
+# Filter = filter_Zernike(X, Y, R_pupila, R_filter, np.pi/2,0.5)
 
 
-fig=plt.figure(figsize=(10,12))
-ax0=fig.add_subplot(221)
-im0=ax0.imshow(Intensidad, cmap='gray')
-ax0.set_label('Intensidad')
-cbar0=plt.colorbar(im0, ax=ax0, label='Intensidad', fraction=0.046, pad=0.04)  # muestra la escala de colores
-ax1=fig.add_subplot(222)
-im1=ax1.imshow(Phase, cmap='gray')
-ax1.set_label('Fase (radianes)')  # etiqueta de la colorbar
-cbar1=plt.colorbar(im1, ax=ax1, label='Fase (radianes)', fraction=0.046, pad=0.04)  # muestra la escala de colores
-ax2=fig.add_subplot(223)
-im2=ax2.imshow(np.abs(Filter), cmap='gray', origin='lower')   # guarda el objeto de imagen
-cbar2 = plt.colorbar(im2, ax=ax2, label='Magnitud', fraction=0.046, pad=0.04)  # muestra la escala de colores
-ax3=fig.add_subplot(224)
-im3=ax3.imshow(np.angle(Filter), cmap='gray', origin='lower')   # guarda el objeto de imagen
-cbar3 = plt.colorbar(im3, ax=ax3, label='Fase (radianes)', fraction=0.046, pad=0.04)  # muestra la escala de colores
-plt.show()
+# fig=plt.figure(figsize=(10,12))
+# ax0=fig.add_subplot(221)
+# im0=ax0.imshow(Intensidad, cmap='gray')
+# ax0.set_label('Intensidad')
+# cbar0=plt.colorbar(im0, ax=ax0, label='Intensidad', fraction=0.046, pad=0.04)  # muestra la escala de colores
+# ax1=fig.add_subplot(222)
+# im1=ax1.imshow(Phase, cmap='gray')
+# ax1.set_label('Fase (radianes)')  # etiqueta de la colorbar
+# cbar1=plt.colorbar(im1, ax=ax1, label='Fase (radianes)', fraction=0.046, pad=0.04)  # muestra la escala de colores
+# ax2=fig.add_subplot(223)
+# im2=ax2.imshow(np.abs(Filter), cmap='gray', origin='lower')   # guarda el objeto de imagen
+# cbar2 = plt.colorbar(im2, ax=ax2, label='Magnitud', fraction=0.046, pad=0.04)  # muestra la escala de colores
+# ax3=fig.add_subplot(224)
+# im3=ax3.imshow(np.angle(Filter), cmap='gray', origin='lower')   # guarda el objeto de imagen
+# cbar3 = plt.colorbar(im3, ax=ax3, label='Fase (radianes)', fraction=0.046, pad=0.04)  # muestra la escala de colores
+# plt.show()

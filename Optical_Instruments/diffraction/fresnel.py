@@ -29,7 +29,10 @@ class Field():
         """
         Funcion que devuelve el campo de la simulacion
         """
-        return self.__E 
+        return self.__E
+    def set_field(self,field):
+        self.__E=field
+        return True
     def import_Intensity(self,path=None,Title="Seleccionar imagen"):
 
         if path is None:

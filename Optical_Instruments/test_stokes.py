@@ -31,6 +31,10 @@ simple_stokes.fresnel_propagate(z)
 simple_stokes.lens(foco_lente)
 simple_stokes.fresnel_propagate(z)
 
+#angulo de tranmision
+Beta=0
+simple_stokes.analyzer_polarizador(0)
+
 simple_stokes.crop_field()
 
 simple_stokes.show_field(fig=fig)

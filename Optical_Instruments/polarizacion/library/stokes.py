@@ -129,6 +129,18 @@ class simple_stokes():
         self.__field_p.zernike_filter(radius_pupil,radius_filter,b,phas)
         self.__field_s.zernike_filter(radius_pupil,radius_filter,b,phas)
         return True
+    def  analyzer_polarizador(self,angle_trans):
+        """
+        Esta funcion simula un polarizador lineal.
+        @parameters
+        angle_trans->angulo de transmision del polarizador
+        """
+        #creamos los elementos de la matriz
+        self.__field_p.set_field(self.__field_p.get_field()*np.cos(angle_trans)**2+self.__field_s.get_field()*np.sin(angle_trans)*np.cos(angle_trans))
+        self.__field_s.set_field(self.__field_s.get_field()*np.sin(angle_trans)**2+self.__field_p.get_field()*np.sin(angle_trans)*np.cos(angle_trans))
+        return True
+                                 
+        return True
     def __field_intensity(self): #@methodostatic
         """
         Esta funcion devuleve la intensidad del campo vectorial

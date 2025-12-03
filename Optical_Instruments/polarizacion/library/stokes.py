@@ -197,21 +197,3 @@ class simple_stokes():
         axis_phas_sp.set_title("espectro de fase del campo neto")
         axis_phas_sp.set_xlabel('X (mm)')
         axis_phas_sp.set_ylabel('Y (mm)')
-
-
-
-
-
-
-
-
-
-
-
-                
-
-
-
-
-
-

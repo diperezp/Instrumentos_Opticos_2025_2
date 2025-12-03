@@ -217,17 +217,3 @@ class Field():
     def show_phase(self,axes):
         phase = np.angle(self.__E)
         axes.imshow(phase, cmap='gray', extent=(-self._grid_size/2*1e3, self._grid_size/2*1e3, -self._grid_size/2*1e3, self._grid_size/2*1e3))
-    
-
-        
-
-
-
-        
-
-    
-    
-
-
-
-

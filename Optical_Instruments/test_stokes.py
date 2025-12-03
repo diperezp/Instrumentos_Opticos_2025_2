@@ -10,7 +10,7 @@ fig=plt.figure(figsize=(10,12))
 #instanciamos la clase simple_stokes
 simple_stokes=simple_stokes(None,wavelenght,grid_size,N)
 
-#importamos la imagenes que representan cada elemento o caracteristica del campo
+#importamos las imagenes que representan cada elemento o caracteristica del campo
 simple_stokes.import_intensity_field_p()
 #simple_stokes.import_phase_field_p()
 simple_stokes.import_intensity_field_s()

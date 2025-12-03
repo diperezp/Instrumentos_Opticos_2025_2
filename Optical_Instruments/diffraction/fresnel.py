@@ -78,8 +78,8 @@ class Field():
         """
         Agrega padding al campo eléctrico para alcanzar un nuevo tamaño físico.
         
-        Parámetros:
-            new_size : nuevo tamaño físico (en metros)
+        Factor:
+            multiplicacion de las dimensiones
         """
         new_size = factor * self._grid_size
         N_new = int(new_size / self._dx)
@@ -144,21 +144,21 @@ class Field():
         self.__E = E_propagated
 
     
-    def crop_field(self):
+    def crop_field(self,factor=2):
         """
         Recorta el campo eléctrico al tamaño original después de la propagación con padding.
         """
-        original_N = self._N // 2
-        start = (self._N - original_N) // 2
+        original_N = self._N // factor
+        start = (self._N - original_N) // factor
         end = start + original_N
         
         E_cropped = self.__E[start:end, start:end]
         
         self.__E = E_cropped
         self._N = original_N
-        self._grid_size = self._grid_size / 2
-        self._x = np.linspace(-self._grid_size / 2, self._grid_size / 2, original_N)
-        self._y = np.linspace(-self._grid_size / 2, self._grid_size / 2, original_N)
+        self._grid_size = self._grid_size / factor
+        self._x = np.linspace(-self._grid_size / factor, self._grid_size / factor, original_N)
+        self._y = np.linspace(-self._grid_size / factor, self._grid_size / factor, original_N)
         self._X, self._Y = np.meshgrid(self._x, self._y)
 
     def lens(self, f):
@@ -212,6 +212,7 @@ class Field():
     def show_intensity(self,axes):
         intensity= np.abs(self.__E)**2
         axes.imshow(intensity, cmap='gray', extent=(-self._grid_size/2*1e3, self._grid_size/2*1e3, -self._grid_size/2*1e3, self._grid_size/2*1e3))
+        axes.set_title("")
         
     def show_phase(self,axes):
         phase = np.angle(self.__E)

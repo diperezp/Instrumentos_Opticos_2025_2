@@ -16,7 +16,7 @@ field_p.import_Intensity(path=r'C:\Users\diego_0hh0fmb\OneDrive\Documents\GitHub
 field_s.import_Intensity(path=r'C:\Users\diego_0hh0fmb\OneDrive\Documents\GitHub\Instrumentos_Opticos_2025_2\Optical_Instruments\polarizacion\recursos_polarizacion\Onda_s_intensidad.png')
 
 #creamos un lienzo de matplotlib
-fig=plt.figure(figsize=(10,12))
+fig=plt.figure(figsize=(6,8))
 #creamos 6 axes
 ax1=fig.add_subplot(2,3,1)
 ax2=fig.add_subplot(2,3,2)

@@ -38,18 +38,22 @@ def rescale_field(F, new_size, wavelength):
     return F_new
 
 
-def import_image(Title="Seleccionar Imagen"):
+def import_image(Title="Seleccionar Imagen",path:str=None):
     """
     Esta funcion abre una pantalla emergente del administrador de archivos para la ruta de una imagen a importar.
     """
-    # Ocultar la ventana principal de Tkinter
-    Tk().withdraw()
 
-    # Abrir el cuadro de diálogo para seleccionar la imagen
-    ruta_imagen = filedialog.askopenfilename(
-        title=Title,
-        filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")]
-    )
+    if path!=None:
+        # Ocultar la ventana principal de Tkinter
+        Tk().withdraw()
+
+        # Abrir el cuadro de diálogo para seleccionar la imagen
+        ruta_imagen = filedialog.askopenfilename(
+            title=Title,
+            filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff")]
+        )
+    else:
+        ruta_imagen=path
     print(ruta_imagen)
 
     # Cargar la imagen como un arreglo numpy
@@ -63,6 +67,8 @@ def import_image(Title="Seleccionar Imagen"):
         return imagen
     else:
         return None
+
+    
 
 def show_image(img_array):
     """

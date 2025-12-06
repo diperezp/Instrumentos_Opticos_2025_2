@@ -209,3 +209,32 @@ class simple_stokes():
         axis_phas_sp.set_title("espectro de fase del campo neto")
         axis_phas_sp.set_xlabel('X (mm)')
         axis_phas_sp.set_ylabel('Y (mm)')
+class birrefrigente():
+    def __init__(self,path_delta_map:str=None,path_theta_map:str=None,N:int=1024):
+        self.__N=N
+        self.__delta_map=
+        self.__theta_map=
+
+        return True
+    def import_theta(self,Path:str=None):
+        image=import_image(path=Path)
+        A_resized = cv2.resize(image, (self.__N, self.__N), interpolation=cv2.INTER_CUBIC)
+        #cambio a float32
+        A_resized = A_resized.astype(np.float32)
+        #normalizamos la intensidad entre 0 y 1
+        A_resized = (A_resized / A_resized.max())*2*np.pi()
+
+        
+        return A_resized
+    
+    def import_delta(self,Path:str=None):
+        image=import_image(path=Path)
+
+        A_resized = cv2.resize(image, (self.__N, self.__N), interpolation=cv2.INTER_CUBIC)
+        #cambio a float32
+        A_resized = A_resized.astype(np.float32)
+        #normalizamos la intensidad entre 0 y 1
+        A_resized = (A_resized / A_resized.max())*2*np.pi()
+
+
+        return image

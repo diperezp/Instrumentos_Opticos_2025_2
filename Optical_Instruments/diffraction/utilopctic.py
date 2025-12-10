@@ -43,7 +43,9 @@ def import_image(Title="Seleccionar Imagen",path:str=None):
     Esta funcion abre una pantalla emergente del administrador de archivos para la ruta de una imagen a importar.
     """
 
-    if path!=None:
+    print("Hello")
+
+    if path==None:
         # Ocultar la ventana principal de Tkinter
         Tk().withdraw()
 
@@ -54,7 +56,7 @@ def import_image(Title="Seleccionar Imagen",path:str=None):
         )
     else:
         ruta_imagen=path
-    print(ruta_imagen)
+        print(ruta_imagen)
 
     # Cargar la imagen como un arreglo numpy
     if ruta_imagen:
@@ -103,8 +105,8 @@ def export_image(img_array):
         # Asegurar que la imagen esté en formato uint8
         if img_array.dtype != np.uint8:
             # Normalizar si es necesario
-            img_norm = img_array - img_array.min()
-            img_norm = img_norm / (img_norm.max() + 1e-15)
+            img_norm = img_array
+            img_norm = img_norm
             img_norm = (img_norm * 255).astype(np.uint8)
         else:
             img_norm = img_array

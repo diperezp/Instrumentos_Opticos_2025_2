@@ -1,6 +1,7 @@
 from diffraction.fresnel import *
 from diffraction.utilopctic import *
-
+import cv2
+import numpy as np
 class simple_stokes():
     def __init__(self,state_pol    #estado de polarizacion
                  ,wavelenght       #longitud de onda de simulacion
@@ -209,32 +210,139 @@ class simple_stokes():
         axis_phas_sp.set_title("espectro de fase del campo neto")
         axis_phas_sp.set_xlabel('X (mm)')
         axis_phas_sp.set_ylabel('Y (mm)')
+
+
+
+
 class birrefrigente():
     def __init__(self,path_delta_map:str=None,path_theta_map:str=None,N:int=1024):
         self.__N=N
-        self.__delta_map=
-        self.__theta_map=
-
-        return True
+        
+        self.__theta_map=self.import_theta()
+        self.__delta_map=self.import_delta()
     def import_theta(self,Path:str=None):
         image=import_image(path=Path)
         A_resized = cv2.resize(image, (self.__N, self.__N), interpolation=cv2.INTER_CUBIC)
-        #cambio a float32
-        A_resized = A_resized.astype(np.float32)
+        A_resized=A_resized.astype(np.float32)
         #normalizamos la intensidad entre 0 y 1
-        A_resized = (A_resized / A_resized.max())*2*np.pi()
+        if A_resized.max()!=0:
+            A_resized = (A_resized / A_resized.max())*2*np.pi
+        else:
+            A_resized=A_resized
 
-        
+        self.__theta_map=A_resized
         return A_resized
     
     def import_delta(self,Path:str=None):
         image=import_image(path=Path)
 
         A_resized = cv2.resize(image, (self.__N, self.__N), interpolation=cv2.INTER_CUBIC)
-        #cambio a float32
-        A_resized = A_resized.astype(np.float32)
+        A_resized=A_resized.astype(np.float32)
         #normalizamos la intensidad entre 0 y 1
-        A_resized = (A_resized / A_resized.max())*2*np.pi()
+        if A_resized.max()!=0:
+            A_resized = (A_resized / A_resized.max())*2*np.pi
+        else:
+            A_resized=A_resized
+        self.__delta_map=A_resized
+        return A_resized
+    def apply_initial_retardo(self,jones_in=[1,0]):
+        """
+        aplica la muesta a un estado de polarizacion conocido
+        uniforme
+        
+        :param jones_in: Estado de polarizacion de la iluminacion
+
+        :Return
+        -------
+        Tupla: Ex_out,Ey_out
+            Camplo transmitido pixel por pixel
+        """
+
+        H,W =self.__N,self.__N
 
 
-        return image
+        #Convertimos el vector de Jones a forma compleja
+        jones_in = np.asarray(jones_in,dtype=complex).reshape(2)
+
+
+        #expandimos el estado uniforme al tamaño de la imagen
+        Ex_in = np.full((H,W),jones_in[0],dtype=complex)
+        Ey_in = np.full((H,W),jones_in[1],dtype=complex)
+
+        # Rotación según theta(x,y)
+        cos = np.cos(self.__theta_map)
+        sin = np.sin(self.__theta_map)
+
+        # Terminos de la Jones local
+        exp_delta = np.exp(1j * self.__delta_map)
+
+        J11 = cos**2 + exp_delta * sin**2
+        J12 = (1 - exp_delta) * cos * sin
+        J21 = J12
+        J22 = sin**2 + exp_delta * cos**2
+
+        # Campo transmitido
+        Ex_out = J11 * Ex_in + J12 * Ey_in
+        Ey_out = J21 * Ex_in + J22 * Ey_in
+
+        return Ex_out, Ey_out
+    
+
+class polarizador():
+    def __init__(self,path_theta_map:str=None,N:int=1024):
+        self.__N=N
+        
+        self.__theta_map=self.import_theta()
+    def import_theta(self,Path:str=None):
+        image=import_image(path=Path)
+        A_resized = cv2.resize(image, (self.__N, self.__N), interpolation=cv2.INTER_CUBIC)
+        A_resized=A_resized.astype(np.float32)
+        #normalizamos la intensidad entre 0 y 1
+        if A_resized.max()!=0:
+            A_resized = (A_resized / A_resized.max())*2*np.pi
+        else:
+            A_resized=A_resized
+
+        self.__theta_map=A_resized
+        return A_resized
+    def apply_initial_polarization(self,jones_in=[(1/np.sqrt(2)),(1/np.sqrt(2))]):
+        """
+        aplica la muesta a un estado de polarizacion conocido
+        uniforme
+        
+        :param jones_in: Estado de polarizacion de la iluminacion
+
+        :Return
+        -------
+        Tupla: Ex_out,Ey_out
+            Camplo transmitido pixel por pixel
+        """
+
+        H,W =self.__N,self.__N
+
+
+        #Convertimos el vector de Jones a forma compleja
+        # jones_in = np.asarray(jones_in,dtype=complex).reshape(2)
+
+
+        #expandimos el estado uniforme al tamaño de la imagen
+        Ex_in = np.full((H,W),jones_in[0],dtype=complex)
+        Ey_in = np.full((H,W),jones_in[1],dtype=complex)
+
+        # Rotación según theta(x,y)
+        cos = np.cos(self.__theta_map)
+        sin = np.sin(self.__theta_map)
+
+        # Terminos de la Jones local
+
+        J11 = cos**2
+        J12 = cos * sin
+        J21 = J12
+        J22 = sin**2 
+
+        # Campo transmitido
+        Ex_out = J11 * Ex_in + J12 * Ey_in
+        Ey_out = J21 * Ex_in + J22 * Ey_in
+
+        return Ex_out, Ey_out
+

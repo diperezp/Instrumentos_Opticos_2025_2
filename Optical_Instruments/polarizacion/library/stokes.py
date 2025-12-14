@@ -19,6 +19,13 @@ class simple_stokes():
         #instanciamos dos clases Field
         self.__field_p=Field(self.__grid_size,self.__wavelenght,self.__N)
         self.__field_s=Field(self.__grid_size,self.__wavelenght,self.__N)
+
+    def set_field_p(self,Field_p=None):
+        self.__field_p.set_field(Field_p)
+    
+    def set_field_s(self,Field_s=None):
+        self.__field_s.set_field(Field_s)
+    
     def import_phase_field_p(self,path=None):
         """
         Esta funcion importa la imagen relacionada a la fase del campo TE
@@ -142,13 +149,14 @@ class simple_stokes():
         return True
                                  
         return True
-    def __field_intensity(self): #@methodostatic
+    def __field_intensity(self): 
         """
         Esta funcion devuleve la intensidad del campo vectorial
         """
         Intensity_field_p=np.abs(self.__field_p.get_field())**2
         Intensity_field_s=np.abs(self.__field_s.get_field())**2
-        return Intensity_field_p+Intensity_field_s
+        Intensity_neta= Intensity_field_p + Intensity_field_s
+        return Intensity_neta
     def __field_phase(self):
         """
         Esta funcion devuelve la phase del campo vectorial
@@ -158,38 +166,12 @@ class simple_stokes():
         return Phase_field_p+Phase_field_s
 
     
-    def show_field(self,fig):
+    def show_field(self,axis_inte_sp):
         """
         Esta funcion muestra un collage del campo y sus componentes de polarizacion.
         En el momento difractivo en el que este.
         """
-        #creamos una lienzo de 2 columnas y 3 filas
-        axis_inte_p=fig.add_subplot(3,2,1)
-        axis_phas_p=fig.add_subplot(3,2,2)
-        axis_inte_s=fig.add_subplot(3,2,3)
-        axis_phas_s=fig.add_subplot(3,2,4)
-        axis_inte_sp=fig.add_subplot(3,2,5)
-        axis_phas_sp=fig.add_subplot(3,2,6)
 
-        #ahora mostramos en la primera fila el campo TE
-        self.__field_p.show_intensity(axis_inte_p)
-        axis_inte_p.set_title("espectro de intensidad del campo TE")
-        axis_inte_p.set_xlabel('X (mm)')
-        axis_inte_p.set_ylabel('Y (mm)')
-        self.__field_p.show_phase(axis_phas_p)
-        axis_phas_p.set_title("espectro de fase del campo TE")
-        axis_phas_p.set_xlabel('X (mm)')
-        axis_phas_p.set_ylabel('Y (mm)')
-
-        #ahora mostramos en la segunda fila el campo TM
-        self.__field_s.show_intensity(axis_inte_s)
-        axis_inte_s.set_title("espectro de intensidad del campo TM")
-        axis_inte_s.set_xlabel('X (mm)')
-        axis_inte_s.set_ylabel('Y (mm)')
-        self.__field_s.show_phase(axis_phas_s)
-        axis_phas_s.set_title("espectro de fase del campo TM")
-        axis_phas_s.set_xlabel('X (mm)')
-        axis_phas_s.set_ylabel('Y (mm)')
 
         #calculamos el campo neto
         intensity_net=self.__field_intensity()
@@ -200,16 +182,16 @@ class simple_stokes():
                             extent=(-self.__grid_size/2*1e3, self.__grid_size/2*1e3, -self.__grid_size/2*1e3, self.__grid_size/2*1e3)
                             )
         axis_inte_sp.set_title("espectro de intensidad del campo neto")
-        axis_inte_sp.set_xlabel('X (mm)')
-        axis_inte_sp.set_ylabel('Y (mm)')
+        axis_inte_sp.set_xlabel('(mm)')
+    def export_field(self):
 
-        axis_phas_sp.imshow(phase_net,
-                            cmap='gray',
-                            extent=(-self.__grid_size/2*1e3, self.__grid_size/2*1e3, -self.__grid_size/2*1e3, self.__grid_size/2*1e3)
-                            )
-        axis_phas_sp.set_title("espectro de fase del campo neto")
-        axis_phas_sp.set_xlabel('X (mm)')
-        axis_phas_sp.set_ylabel('Y (mm)')
+
+        #calculamos la intensidad del campo
+        Intensity=self.__field_intensity()
+        Intensity=Intensity/Intensity.max()
+        
+        #exportamos la imagen
+        export_image(Intensity)
 
 
 
@@ -305,6 +287,7 @@ class polarizador():
 
         self.__theta_map=A_resized
         return A_resized
+
     def apply_initial_polarization(self,jones_in=[(1/np.sqrt(2)),(1/np.sqrt(2))]):
         """
         aplica la muesta a un estado de polarizacion conocido

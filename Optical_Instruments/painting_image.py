@@ -18,7 +18,7 @@ imagen*=0.5
 
 
 fig=plt.figure(figsize=(6,6))
-plt.imshow(imagen, cmap='gray', origin='upper',colorizer='',vmin=0,vmax=1)
+plt.imshow(imagen, cmap='gray', origin='upper',vmin=0,vmax=1)
 plt.axis('off')
 plt.title('Imagen de prueba')
 plt.show()

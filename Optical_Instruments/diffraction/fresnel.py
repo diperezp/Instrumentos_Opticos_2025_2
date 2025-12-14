@@ -33,6 +33,9 @@ class Field():
     def set_field(self,field):
         self.__E=field
         return True
+    def set_Magnificacion(self,MX):
+        self._X/=MX
+        self._Y/=MX
     def import_Intensity(self,path=None,Title="Seleccionar imagen"):
 
         if path is None:
@@ -163,6 +166,10 @@ class Field():
         self._x = np.linspace(-self._grid_size / factor, self._grid_size / factor, original_N)
         self._y = np.linspace(-self._grid_size / factor, self._grid_size / factor, original_N)
         self._X, self._Y = np.meshgrid(self._x, self._y)
+        self._X/=2
+        self._Y/=2
+
+
 
     def lens(self, f):
         """
